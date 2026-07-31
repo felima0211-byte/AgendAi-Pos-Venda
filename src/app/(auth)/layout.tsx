@@ -4,9 +4,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full max-w-sm flex flex-col items-center gap-8">
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">
-          <div className="w-14 h-14 rounded-[var(--radius-2xl)] bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-[var(--shadow-primary)]">
-            <span className="text-white text-2xl font-bold">A</span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-agendai.png"
+            alt="AgendAI — Pós-Venda Inteligente"
+            className="w-24 h-auto drop-shadow-[0_8px_20px_rgba(26,24,48,0.15)]"
+          />
           <span className="text-[var(--text-h3)] font-bold text-[var(--color-text-primary)]">
             AgendAI
           </span>
