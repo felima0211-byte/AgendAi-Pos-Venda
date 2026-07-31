@@ -7,7 +7,9 @@ function createPrismaClient() {
     throw new Error('DATABASE_URL não configurada')
   }
 
-  const adapter = new PrismaPg({ connectionString })
+  // ssl rejectUnauthorized:false — necessário para o pooler do Supabase (o certificado
+  // AWS não está na cadeia do runtime serverless da Vercel). A conexão segue criptografada.
+  const adapter = new PrismaPg({ connectionString, ssl: { rejectUnauthorized: false } })
 
   return new PrismaClient({
     adapter,
