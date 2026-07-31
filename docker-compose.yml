@@ -1,0 +1,14 @@
+# ── AgendAI — Docker Compose ──
+# Sobe a aplicação em produção. O banco é o Supabase (gerenciado), então
+# passamos as credenciais por variáveis de ambiente / arquivo .env.
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped

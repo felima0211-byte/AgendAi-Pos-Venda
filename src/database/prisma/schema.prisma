@@ -1,0 +1,452 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  SELLER
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  VIP
+}
+
+enum SaleStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum ReminderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  SNOOZED
+}
+
+enum ReminderPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// Tipos de lembrete do Motor de Pós-Venda (Fatia 11)
+enum ReminderKind {
+  POST_SALE_CHECK // +3d  — confirmar se o produto serviu
+  EXCHANGE_CHECK  // +15d — verificar necessidade de troca
+  RECOMMEND       // +30d — sugerir novos produtos relacionados
+  SIZE_UPDATE     // +30d — oferecer o próximo tamanho (progressão de bebê)
+  REACTIVATE      // +60d — reativar relacionamento
+  WINBACK         // +90d — nova abordagem se não houve recompra
+  CUSTOM          // criado manualmente pela vendedora
+}
+
+enum InteractionType {
+  CALL
+  VISIT
+  WHATSAPP
+  EMAIL
+  AUDIO_NOTE
+  OTHER
+}
+
+enum TimelineEventType {
+  SALE_CREATED
+  SALE_UPDATED
+  SALE_CANCELLED
+  REMINDER_CREATED
+  REMINDER_COMPLETED
+  INTERACTION_REGISTERED
+  CLIENT_UPDATED
+  NOTE_ADDED
+  AI_INSIGHT
+}
+
+enum AudioStatus {
+  UPLOADING
+  PROCESSING
+  COMPLETED
+  ERROR
+}
+
+enum ProductCategory {
+  CLOTHING
+  SHOES
+  ACCESSORIES
+  BAGS
+  JEWELRY
+  OTHER
+}
+
+// Tipos de mensagem gerada por IA (Fatia 12)
+enum MessageType {
+  POST_SALE   // pós-venda
+  THANK_YOU   // agradecimento
+  REPURCHASE  // recompra
+  REMINDER    // lembrete
+  NEWS        // novidades
+  HOLIDAY     // datas comemorativas
+  BIRTHDAY    // aniversário
+  WELCOME     // boas-vindas
+  CUSTOM
+}
+
+// ─────────────────────────────────────────────
+// MODELS
+// ─────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  name      String
+  email     String   @unique
+  phone     String?
+  avatarUrl String?
+  role      UserRole @default(SELLER)
+
+  clients       Client[]
+  products      Product[]
+  conversations Conversation[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Client {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  birthDate DateTime?
+  notes     String?      @db.Text
+  tags      String[]
+  status    ClientStatus @default(ACTIVE)
+
+  // AI-ready
+  aiSummary  String?   @db.Text
+  aiKeywords String[]
+  lastAiSync DateTime?
+
+  children          Child[]
+  sales             Sale[]
+  reminders         Reminder[]
+  interactions      Interaction[]
+  timelineEvents    TimelineEvent[]
+  generatedMessages GeneratedMessage[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([userId, deletedAt])
+  @@index([userId, status])
+  @@map("clients")
+}
+
+model Child {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  name      String
+  birthDate DateTime?
+  notes     String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([clientId])
+  @@index([deletedAt])
+  @@map("children")
+}
+
+model Product {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  name        String
+  description String?
+  price       Decimal         @db.Decimal(10, 2)
+  category    ProductCategory @default(OTHER)
+  imageUrl    String?
+  isActive    Boolean         @default(true)
+
+  saleItems SaleItem[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([category])
+  @@index([isActive])
+  @@index([userId, isActive])
+  @@map("products")
+}
+
+model Sale {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  status     SaleStatus @default(PENDING)
+  total      Decimal    @db.Decimal(10, 2)
+  discount   Decimal?   @db.Decimal(10, 2)
+  notes      String?    @db.Text
+  deliveryAt DateTime?
+
+  // AI-ready
+  aiSummary   String? @db.Text
+  aiSentiment String?
+
+  items          SaleItem[]
+  interactions   Interaction[]
+  reminders      Reminder[]
+  timelineEvents TimelineEvent[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([clientId, deletedAt])
+  @@index([clientId, status])
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(10, 2)
+  discount  Decimal? @db.Decimal(10, 2)
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("sale_items")
+}
+
+model Reminder {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  // Origem do lembrete (Motor de Pós-Venda ancora no atendimento;
+  // saleId fica pronto para quando houver registro formal de venda)
+  interactionId String?
+  interaction   Interaction? @relation(fields: [interactionId], references: [id])
+  saleId        String?
+  sale          Sale?        @relation(fields: [saleId], references: [id])
+
+  kind     ReminderKind     @default(CUSTOM)
+  title    String
+  body     String?          @db.Text
+  dueAt    DateTime
+  status   ReminderStatus   @default(PENDING)
+  priority ReminderPriority @default(MEDIUM)
+
+  // Contexto da compra para gerar a mensagem depois (produtos, tamanho, idade...)
+  metadata Json?
+
+  // AI-ready
+  aiGenerated Boolean @default(false)
+  aiReason    String? @db.Text
+
+  completedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([clientId])
+  @@index([interactionId])
+  @@index([saleId])
+  @@index([dueAt])
+  @@index([status])
+  @@index([kind])
+  @@index([clientId, status, dueAt])
+  @@map("reminders")
+}
+
+model Interaction {
+  id       String  @id @default(cuid())
+  clientId String
+  client   Client  @relation(fields: [clientId], references: [id])
+  saleId   String?
+  sale     Sale?   @relation(fields: [saleId], references: [id])
+
+  type  InteractionType @default(AUDIO_NOTE)
+  notes String?         @db.Text
+
+  // AI-ready (Groq/Whisper output)
+  aiTranscription  String? @db.Text
+  aiSummary        String? @db.Text
+  aiSentiment      String?
+  aiKeywords       String[]
+  aiActionItems    Json?
+  // IA Estruturadora output
+  aiExtractedData  Json?
+  aiProcessedAt    DateTime?
+
+  audio     Audio?
+  reminders Reminder[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([clientId])
+  @@index([saleId])
+  @@index([type])
+  @@index([clientId, createdAt])
+  @@map("interactions")
+}
+
+model Audio {
+  id            String      @id @default(cuid())
+  interactionId String      @unique
+  interaction   Interaction @relation(fields: [interactionId], references: [id])
+
+  // Status do processamento
+  status        AudioStatus @default(UPLOADING)
+
+  // Supabase Storage
+  url           String
+  bucket        String @default("audios")
+  path          String
+  durationSecs  Int?
+  fileSizeBytes Int?
+  mimeType      String @default("audio/webm")
+
+  // Groq Whisper output
+  transcription      String?   @db.Text
+  transcribedAt      DateTime?
+  transcriptionError String?
+  whisperModel       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([interactionId])
+  @@map("audios")
+}
+
+model TimelineEvent {
+  id       String  @id @default(cuid())
+  clientId String
+  client   Client  @relation(fields: [clientId], references: [id])
+  saleId   String?
+  sale     Sale?   @relation(fields: [saleId], references: [id])
+
+  type  TimelineEventType
+  title String
+  body  String?           @db.Text
+  metadata Json?
+
+  // AI-ready
+  aiGenerated Boolean @default(false)
+  aiInsight   String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@index([saleId])
+  @@index([type])
+  @@index([clientId, createdAt])
+  @@map("timeline_events")
+}
+
+// ── Fatia 12 — Mensagens Inteligentes ──
+// Guarda cada mensagem gerada por IA para o histórico ("Histórico das mensagens").
+model GeneratedMessage {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  // origem opcional: um lembrete de pós-venda
+  reminderId String?
+
+  type    MessageType @default(CUSTOM)
+  content String      @db.Text
+  model   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@index([clientId, createdAt])
+  @@map("generated_messages")
+}
+
+// ── Fatia 14 — Assistente IA Conversacional ──
+model Conversation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  title String?
+
+  messages ChatMessage[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([userId, updatedAt])
+  @@map("conversations")
+}
+
+model ChatMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  role      String // 'user' | 'assistant'
+  content   String @db.Text
+  citations Json? // dados reais citados na resposta
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([conversationId, createdAt])
+  @@map("chat_messages")
+}

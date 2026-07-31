@@ -1,0 +1,315 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* ── Cores — Design System Oficial v1 (2026-07-31) ── */
+  --color-primary: #6C4CF0;
+  --color-primary-light: #8B5CF6;
+  --color-primary-dark: #5638D6;   /* primary-hover */
+  --color-primary-hover: #5638D6;
+  --color-secondary: #8B5CF6;
+  /* accent repontado para warning (sem laranja decorativo) */
+  --color-accent: #C46A1F;
+  --color-success: #1F9D57;
+  --color-warning: #C46A1F;
+  --color-error: #EF4444;          /* danger */
+
+  /* Tints de marca */
+  --color-primary-tint: #F1EEFB;
+  --color-primary-tint-2: #EFE9FC;
+  --color-primary-tint-3: #E3DBFA;
+
+  /* Fundos de semânticas */
+  --color-success-bg: #E4F6EC;
+  --color-warning-bg: #FCE8D6;
+  --color-vip: #B5822A;
+  --color-vip-bg: #F8E9CE;
+
+  --color-background: #F6F6FB;      /* bg-app */
+  --color-page: #EDEDF5;            /* bg-page (fora do device) */
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-alt: #F2F1F8;
+  --color-border: #E7E6F0;
+  --color-border-strong: #B3B0C4;  /* divider */
+  --color-divider: #B3B0C4;
+
+  --color-text-primary: #1A1830;   /* text-strong */
+  --color-text-body: #4A4760;
+  --color-text-secondary: #6B6884; /* text-muted */
+  --color-text-subtle: #8B8896;
+  --color-text-tertiary: #9C99AB;  /* text-faint */
+  --color-text-inverse: #FFFFFF;
+
+  /* ── Gradientes ── DEPRECADOS no DS v1 (não usar em telas novas). Mantidos só p/ compat. */
+  --color-gradient-primary: #6C4CF0;
+  --color-gradient-accent: #C46A1F;
+  --color-gradient-gold: #B5822A;
+
+  /* ── Tipografia ── */
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --text-h1: 2rem;        /* 32px */
+  --text-h2: 1.5rem;      /* 24px */
+  --text-h3: 1.25rem;     /* 20px */
+  --text-body: 1rem;      /* 16px */
+  --text-caption: 0.875rem; /* 14px */
+  --text-small: 0.75rem;  /* 12px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ── Raios ── */
+  --radius-xs: 0.375rem;   /* 6px */
+  --radius-sm: 0.5rem;     /* 8px */
+  --radius-md: 0.75rem;    /* 12px */
+  --radius-lg: 1rem;       /* 16px */
+  --radius-xl: 1.25rem;    /* 20px */
+  --radius-2xl: 1.5rem;    /* 24px */
+  --radius-full: 9999px;
+
+  /* ── Espaçamentos ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* ── Sombras ── DS v1: praticamente nenhuma (separação por cor de superfície).
+     Reservadas ao botão central/CTA elevado. */
+  --shadow-xs: none;
+  --shadow-sm: 0 1px 2px 0 rgb(26 24 48 / 0.04);
+  --shadow-md: 0 2px 8px 0 rgb(26 24 48 / 0.05);
+  --shadow-lg: 0 4px 14px 0 rgb(26 24 48 / 0.07);
+  --shadow-xl: 0 8px 24px 0 rgb(26 24 48 / 0.08);
+  --shadow-primary: 0 6px 18px 0 rgb(108 76 240 / 0.22);
+  --shadow-accent: 0 6px 18px 0 rgb(196 106 31 / 0.20);
+
+  /* ── Duração de animações ── */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  /* ── Z-index ── */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+/* ── Tema claro fixo (DS Oficial v1 é light-only; sem dark mode) ── */
+
+/* ── Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Animações ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in { animation: fadeIn var(--duration-base) ease-out; }
+.animate-slide-up { animation: slideUp var(--duration-slow) ease-out; }
+.animate-slide-down { animation: slideDown var(--duration-slow) ease-out; }
+.animate-scale-in { animation: scaleIn var(--duration-base) ease-out; }
+.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-border) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-full); }
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Alinhado ao DS Oficial v1 — estes tokens do shadcn são remapeados por @theme inline
+     para --color-*, então precisam bater com a marca (senão sobrescrevem o roxo do DS). */
+  --background: #F6F6FB;
+  --foreground: #1A1830;
+  --card: #FFFFFF;
+  --card-foreground: #1A1830;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1830;
+  --primary: #6C4CF0;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F2F1F8;
+  --secondary-foreground: #1A1830;
+  --muted: #F2F1F8;
+  --muted-foreground: #6B6884;
+  --accent: #F1EEFB;
+  --accent-foreground: #6C4CF0;
+  --destructive: #EF4444;
+  --border: #E7E6F0;
+  --input: #E7E6F0;
+  --ring: #6C4CF0;
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
