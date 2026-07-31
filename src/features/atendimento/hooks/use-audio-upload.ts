@@ -50,10 +50,22 @@ export function useAudioUpload(): UseAudioUploadReturn {
 
         setUploadProgress(80)
 
-        const data = await res.json()
+        // Blindagem: resposta pode não ser JSON (redirect de sessão/proteção, HTML de erro, 413).
+        // Evita o erro cru do Safari ("The string did not match the expected pattern").
+        if (res.status === 413) {
+          throw new Error('Áudio muito grande para envio. Grave um trecho mais curto.')
+        }
+        const contentType = res.headers.get('content-type') ?? ''
+        if (!contentType.includes('application/json')) {
+          if (res.status === 401 || res.status === 403 || (res.status >= 300 && res.status < 400)) {
+            throw new Error('Sessão expirada ou acesso protegido. Recarregue a página e entre novamente.')
+          }
+          throw new Error(`Falha no envio (${res.status || 'sem resposta'}). Verifique a conexão e tente novamente.`)
+        }
 
-        if (!res.ok) {
-          throw new Error(data.error ?? `Erro ${res.status}`)
+        const data = await res.json().catch(() => null)
+        if (!res.ok || !data || data.error) {
+          throw new Error(data?.error ?? `Erro ${res.status}`)
         }
 
         setResult(data as UploadResult)

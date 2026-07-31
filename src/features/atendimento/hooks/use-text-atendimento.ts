@@ -24,8 +24,15 @@ export function useTextAtendimento() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, clientId: clientId ?? undefined }),
       })
-      const json = await res.json()
-      if (!res.ok || !json.ok) throw new Error(json.error?.message ?? 'Erro ao registrar atendimento')
+      const contentType = res.headers.get('content-type') ?? ''
+      if (!contentType.includes('application/json')) {
+        if (res.status === 401 || res.status === 403 || (res.status >= 300 && res.status < 400)) {
+          throw new Error('Sessão expirada ou acesso protegido. Recarregue a página e entre novamente.')
+        }
+        throw new Error(`Falha ao registrar (${res.status || 'sem resposta'}). Tente novamente.`)
+      }
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.ok) throw new Error(json?.error?.message ?? 'Erro ao registrar atendimento')
       setResult(json.data as TextResult)
       setState('success')
       return json.data as TextResult
