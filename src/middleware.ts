@@ -5,12 +5,19 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)',
+  '/api/health(.*)',
 ])
+
+const isApiRoute = createRouteMatcher(['/api(.*)', '/trpc(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     const { userId } = await auth()
     if (!userId) {
+      // API: responde 401 JSON (nunca redireciona um POST com corpo — isso quebrava o /sign-in)
+      if (isApiRoute(req)) {
+        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+      }
       const signInUrl = new URL('/sign-in', req.url)
       signInUrl.searchParams.set('redirect_url', req.url)
       return NextResponse.redirect(signInUrl)
