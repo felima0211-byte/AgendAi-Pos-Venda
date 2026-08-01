@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function SignInPage() {
@@ -11,6 +11,7 @@ export default function SignInPage() {
   const params = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -37,11 +38,20 @@ export default function SignInPage() {
         placeholder="E-mail" autoComplete="email"
         className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--color-primary)]"
       />
-      <input
-        type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-        placeholder="Senha" autoComplete="current-password"
-        className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--color-primary)]"
-      />
+      <div className="relative">
+        <input
+          type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)}
+          placeholder="Senha" autoComplete="current-password"
+          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-[var(--color-primary)]"
+        />
+        <button
+          type="button" onClick={() => setShowPassword((v) => !v)}
+          aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] active:scale-95"
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
       {error && <p className="text-xs text-[var(--color-error)]">{error}</p>}
       <button
         type="submit" disabled={loading}
