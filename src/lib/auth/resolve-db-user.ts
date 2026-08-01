@@ -31,17 +31,25 @@ export async function resolveDbUser(clerkId: string): Promise<DbUserLite> {
     cu?.username ||
     'Usuário'
 
-  const user = await prisma.user.upsert({
-    where: { clerkId },
-    create: {
+  // Já existe linha com este e-mail (ex.: migração Clerk→Supabase)? Migra o id de auth
+  // em vez de tentar inserir (evita violar o unique de email → 500).
+  const byEmail = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+  if (byEmail) {
+    return prisma.user.update({
+      where: { id: byEmail.id },
+      data: { clerkId, ...(cu?.imageUrl ? { avatarUrl: cu.imageUrl } : {}) },
+      select: { id: true, role: true },
+    })
+  }
+
+  return prisma.user.create({
+    data: {
       clerkId,
       name,
       email,
       avatarUrl: cu?.imageUrl ?? null,
       phone: cu?.phoneNumbers?.[0]?.phoneNumber ?? null,
     },
-    update: {},
     select: { id: true, role: true },
   })
-  return user
 }
