@@ -6,39 +6,44 @@ import { cn } from '@/lib/utils'
 import { useSalesDashboard, type SalesPeriod } from '../hooks/use-sales-dashboard'
 
 const PERIODS: { key: SalesPeriod; label: string }[] = [
-  { key: 'daily', label: 'Diário' },
-  { key: 'weekly', label: 'Semanal' },
-  { key: 'monthly', label: 'Mensal' },
+  { key: 'daily', label: 'Hoje' },
+  { key: 'weekly', label: 'Semana' },
+  { key: 'monthly', label: 'Mês' },
 ]
 
 const W = 320
-const H = 120
-const PAD_X = 10
-const PAD_TOP = 12
-const PAD_BOTTOM = 10
+const H = 130
+const PAD_X = 6
+const PAD_Y = 12
 
 function brl(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 }
 
 export function SalesDashboard() {
-  const { period, setPeriod, data, loading } = useSalesDashboard('daily')
+  const { period, setPeriod, data, loading } = useSalesDashboard('weekly')
   const [open, setOpen] = useState(true)
 
-  const pts = data.points
-  const values = pts.map((p) => p.value)
-  const maxV = Math.max(1, ...values)
+  const values = data.points.map((p) => p.value)
+  const minV = values.length ? Math.min(...values) : 0
+  const maxV = values.length ? Math.max(...values) : 1
+  const span = Math.max(1, maxV - minV)
 
-  const coords = pts.map((p, i) => {
-    const x = pts.length > 1 ? PAD_X + (i / (pts.length - 1)) * (W - PAD_X * 2) : W / 2
-    const y = H - PAD_BOTTOM - (p.value / maxV) * (H - PAD_TOP - PAD_BOTTOM)
-    return { x, y, ...p }
+  const coords = data.points.map((p, i) => {
+    const x = data.points.length > 1 ? PAD_X + (i / (data.points.length - 1)) * (W - PAD_X * 2) : W - PAD_X
+    const y = H - PAD_Y - ((p.value - minV) / span) * (H - PAD_Y * 2)
+    return { x, y, value: p.value }
   })
 
   const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ')
   const areaPath = coords.length
-    ? `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${H - PAD_BOTTOM} L ${coords[0].x.toFixed(1)} ${H - PAD_BOTTOM} Z`
+    ? `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${H - PAD_Y} L ${coords[0].x.toFixed(1)} ${H - PAD_Y} Z`
     : ''
+  const last = coords[coords.length - 1]
+  // linha de referência pontilhada = base (acumulado antes da janela)
+  const baseY = H - PAD_Y - ((data.baseline - minV) / span) * (H - PAD_Y * 2)
+  const cresceu = data.totalGeral >= data.baseline
+  const lineColor = cresceu ? 'var(--color-success)' : 'var(--color-error)'
 
   return (
     <div className="px-4 mt-6 mb-4 animate-slide-up" style={{ animationDelay: '240ms' }}>
@@ -76,52 +81,37 @@ export function SalesDashboard() {
                 {data.totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </div>
-            {data.total > 0 && (
-              <span className="flex items-center gap-1 text-[12px] font-semibold text-[var(--color-success)]">
-                <TrendingUp size={14} /> +{brl(data.total)}
+            {data.vendasNaJanela > 0 && (
+              <span className="flex items-center gap-1 text-[12px] font-semibold" style={{ color: lineColor }}>
+                <TrendingUp size={14} /> +{brl(data.totalGeral - data.baseline)}
               </span>
             )}
           </div>
 
           {loading ? (
-            <div className="h-[120px] flex items-center justify-center text-[13px] text-[var(--color-text-tertiary)]">Carregando…</div>
-          ) : data.totalGeral === 0 ? (
-            <div className="h-[120px] flex items-center justify-center text-[13px] text-[var(--color-text-secondary)]">
-              Sem vendas no período.
+            <div className="h-[130px] flex items-center justify-center text-[13px] text-[var(--color-text-tertiary)]">Carregando…</div>
+          ) : data.points.length <= 1 ? (
+            <div className="h-[130px] flex items-center justify-center text-[13px] text-[var(--color-text-secondary)]">
+              Nenhuma venda no período.
             </div>
           ) : (
-            <div className="flex">
-              {/* eixo Y (R$) */}
-              <div className="flex flex-col justify-between h-[120px] pr-2 text-right shrink-0">
-                <span className="text-[9px] text-[var(--color-text-tertiary)]">{brl(maxV)}</span>
-                <span className="text-[9px] text-[var(--color-text-tertiary)]">{brl(maxV / 2)}</span>
-                <span className="text-[9px] text-[var(--color-text-tertiary)]">R$ 0</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[120px]" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.20" />
-                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  {/* linhas de grade */}
-                  {[PAD_TOP, (H - PAD_BOTTOM + PAD_TOP) / 2, H - PAD_BOTTOM].map((gy, i) => (
-                    <line key={i} x1={PAD_X} y1={gy} x2={W - PAD_X} y2={gy} stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 3" />
-                  ))}
-                  {areaPath && <path d={areaPath} fill="url(#salesFill)" />}
-                  <path d={linePath} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                  {coords.map((c, i) => (
-                    <circle key={i} cx={c.x} cy={c.y} r={3} fill="var(--color-surface)" stroke="var(--color-primary)" strokeWidth="2" />
-                  ))}
-                </svg>
-                {/* eixo X (período) */}
-                <div className="flex justify-between mt-1">
-                  {coords.map((c, i) => (
-                    <span key={i} className="text-[9px] text-[var(--color-text-subtle)] flex-1 text-center truncate">{c.label}</span>
-                  ))}
-                </div>
-              </div>
+            <div className="relative">
+              <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[130px]" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={lineColor} stopOpacity="0.22" />
+                    <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                {/* referência pontilhada (base) */}
+                <line x1={PAD_X} y1={baseY} x2={W - PAD_X} y2={baseY} stroke="var(--color-divider)" strokeWidth="1" strokeDasharray="2 3" />
+                {areaPath && <path d={areaPath} fill="url(#salesFill)" />}
+                <path d={linePath} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                {last && <circle cx={last.x} cy={last.y} r={3.5} fill={lineColor} />}
+              </svg>
+              {/* rótulos Y (topo/base) sobrepostos */}
+              <span className="absolute top-1 left-0 text-[9px] text-[var(--color-text-tertiary)]">{brl(maxV)}</span>
+              <span className="absolute bottom-1 left-0 text-[9px] text-[var(--color-text-tertiary)]">{brl(minV)}</span>
             </div>
           )}
         </div>

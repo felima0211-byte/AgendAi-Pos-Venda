@@ -7,13 +7,13 @@ export type SalesPeriod = 'daily' | 'weekly' | 'monthly'
 
 export interface SalesSeries {
   period: SalesPeriod
-  points: Array<{ label: string; value: number }>
-  total: number
-  trend: number
+  points: Array<{ value: number; t: string }>
+  baseline: number
   totalGeral: number
+  vendasNaJanela: number
 }
 
-const EMPTY: SalesSeries = { period: 'daily', points: [], total: 0, trend: 0, totalGeral: 0 }
+const EMPTY: SalesSeries = { period: 'weekly', points: [], baseline: 0, totalGeral: 0, vendasNaJanela: 0 }
 
 export function useSalesDashboard(initial: SalesPeriod = 'daily') {
   const [period, setPeriod] = useState<SalesPeriod>(initial)
