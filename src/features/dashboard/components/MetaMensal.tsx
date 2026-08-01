@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Target, Pencil, Check, X, CalendarRange } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { onRefresh } from '@/lib/refresh-bus'
 
 const STORAGE_KEY = 'agendai:meta-mensal'
 
@@ -59,6 +60,7 @@ export function MetaMensal() {
 
   useEffect(() => {
     if (config && config.valor > 0) loadFaturamento(config)
+    return onRefresh(() => { if (config && config.valor > 0) loadFaturamento(config) })
   }, [config, loadFaturamento])
 
   const startEdit = () => {

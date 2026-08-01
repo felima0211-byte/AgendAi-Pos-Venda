@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { onRefresh } from '@/lib/refresh-bus'
 
 export interface VendasResumo {
   totalVendas: number
@@ -35,6 +36,7 @@ export function useVendas(enabled: boolean) {
 
   useEffect(() => {
     if (enabled) load()
+    return onRefresh(() => { if (enabled) load() })
   }, [enabled, load])
 
   return { data, loading, refresh: load }

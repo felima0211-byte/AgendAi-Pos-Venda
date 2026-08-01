@@ -6,6 +6,7 @@ import { useAudioRecorder } from '@/hooks/use-audio-recorder'
 import { useAudioUpload } from '../hooks/use-audio-upload'
 import { AudioRecorder } from './AudioRecorder'
 import { AudioPreview } from './AudioPreview'
+import { emitRefresh } from '@/lib/refresh-bus'
 
 interface RecordAtendimentoPageProps {
   clientId?: string
@@ -22,6 +23,7 @@ export function RecordAtendimentoPage({ clientId, saleId }: RecordAtendimentoPag
   const handleSend = async () => {
     if (!recorder.audioBlob) return
     await uploader.upload(recorder.audioBlob, recorder.mimeType, { clientId, saleId })
+    emitRefresh()
   }
 
   const handleDelete = () => {

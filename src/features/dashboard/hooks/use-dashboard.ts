@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { onRefresh } from '@/lib/refresh-bus'
 
 export interface DashboardData {
   stats: {
@@ -43,19 +44,32 @@ const EMPTY: DashboardData = {
   vendidoMes: 0,
 }
 
-export function useDashboard() {
-  const [data, setData] = useState<DashboardData>(EMPTY)
-  const [loading, setLoading] = useState(true)
+// Cache em módulo: Header e Content compartilham o último dado (evita "zerar e voltar")
+let cache: DashboardData = EMPTY
 
-  useEffect(() => {
-    let active = true
-    fetch('/api/dashboard')
-      .then((r) => (r.ok ? r.json() : EMPTY))
-      .then((d) => { if (active) setData({ ...EMPTY, ...d }) })
-      .catch(() => { if (active) setData(EMPTY) })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
+export function useDashboard() {
+  const [data, setData] = useState<DashboardData>(cache)
+  const [loading, setLoading] = useState(cache === EMPTY)
+
+  const load = useCallback(async () => {
+    try {
+      const r = await fetch('/api/dashboard')
+      if (r.ok) {
+        const d = await r.json()
+        cache = { ...EMPTY, ...d }
+        setData(cache)
+      }
+    } catch {
+      /* mantém o cache */
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  return { data, loading }
+  useEffect(() => {
+    load()
+    return onRefresh(load)
+  }, [load])
+
+  return { data, loading, refresh: load }
 }

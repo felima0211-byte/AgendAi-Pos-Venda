@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { onRefresh } from '@/lib/refresh-bus'
 
 export type SalesPeriod = 'daily' | 'weekly' | 'monthly'
 
@@ -32,7 +33,10 @@ export function useSalesDashboard(initial: SalesPeriod = 'daily') {
     }
   }, [])
 
-  useEffect(() => { load(period) }, [period, load])
+  useEffect(() => {
+    load(period)
+    return onRefresh(() => load(period))
+  }, [period, load])
 
   return { period, setPeriod, data, loading }
 }

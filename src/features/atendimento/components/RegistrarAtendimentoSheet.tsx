@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X, Mic, Type, ShieldCheck, CheckCircle2, Loader2, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTextAtendimento } from '../hooks/use-text-atendimento'
+import { emitRefresh } from '@/lib/refresh-bus'
 
 interface RegistrarAtendimentoSheetProps {
   open: boolean
@@ -38,7 +39,10 @@ export function RegistrarAtendimentoSheet({ open, onClose, clientId, onRegistere
   const handleSubmit = async () => {
     if (text.trim().length < 3) return
     const r = await submit(text, clientId)
-    if (r) onRegistered?.()
+    if (r) {
+      emitRefresh()
+      onRegistered?.()
+    }
   }
 
   return (

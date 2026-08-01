@@ -5,10 +5,19 @@ import { resolveDbUser } from '@/lib/auth/resolve-db-user'
 
 type Period = 'daily' | 'weekly' | 'monthly'
 
+const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+function endOfDay(d: Date) {
+  const x = new Date(d)
+  x.setHours(23, 59, 59, 999)
+  return x
+}
+
 /**
  * GET /api/analytics/sales?period=daily|weekly|monthly
- * Série de LINHA cumulativa: cada venda é um ponto e a linha vai crescendo.
- * O eixo Y é o total de vendas acumulado; o X é o momento de cada venda dentro da janela.
+ * Linha de FATURAMENTO ACUMULADO (R$): eixo Y = R$, eixo X = período.
+ * A cada balde o valor é a soma de todas as vendas até ali — a linha só sobe.
  */
 export async function GET(req: NextRequest) {
   const { userId: clerkId } = await auth()
@@ -18,37 +27,44 @@ export async function GET(req: NextRequest) {
   const period = (new URL(req.url).searchParams.get('period') ?? 'daily') as Period
 
   const now = new Date()
-  const windowStart = new Date(now)
-  if (period === 'daily') windowStart.setHours(0, 0, 0, 0)
-  else if (period === 'weekly') { windowStart.setDate(windowStart.getDate() - 6); windowStart.setHours(0, 0, 0, 0) }
-  else { windowStart.setMonth(windowStart.getMonth() - 1); windowStart.setHours(0, 0, 0, 0) }
 
-  const scope = { deletedAt: null, client: { userId: dbUser.id, deletedAt: null } }
+  // limites (fim) de cada balde no eixo X
+  const bucketEnds: { end: Date; label: string }[] = []
+  if (period === 'daily') {
+    for (let i = 6; i >= 0; i--) {
+      const day = new Date(now)
+      day.setDate(day.getDate() - i)
+      bucketEnds.push({ end: endOfDay(day), label: WEEKDAYS[day.getDay()] })
+    }
+  } else if (period === 'weekly') {
+    for (let i = 7; i >= 0; i--) {
+      const day = new Date(now)
+      day.setDate(day.getDate() - i * 7)
+      bucketEnds.push({ end: endOfDay(day), label: `${day.getDate()}/${day.getMonth() + 1}` })
+    }
+  } else {
+    for (let i = 5; i >= 0; i--) {
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999)
+      bucketEnds.push({ end, label: MONTHS[end.getMonth()] })
+    }
+  }
 
-  // Total de vendas antes da janela (ponto de partida da linha)
-  const countBefore = await prisma.sale.count({ where: { ...scope, createdAt: { lt: windowStart } } })
-
-  // Vendas dentro da janela, em ordem cronológica
   const sales = await prisma.sale.findMany({
-    where: { ...scope, createdAt: { gte: windowStart } },
-    orderBy: { createdAt: 'asc' },
-    select: { createdAt: true },
+    where: { deletedAt: null, client: { userId: dbUser.id, deletedAt: null } },
+    select: { createdAt: true, total: true },
   })
 
-  const fmt = new Intl.DateTimeFormat('pt-BR',
-    period === 'daily'
-      ? { hour: '2-digit', minute: '2-digit' }
-      : { day: '2-digit', month: '2-digit' },
-  )
+  // valor acumulado (R$) até o fim de cada balde
+  const points = bucketEnds.map((b) => ({
+    label: b.label,
+    value: sales
+      .filter((s) => s.createdAt <= b.end)
+      .reduce((acc, s) => acc + Number(s.total), 0),
+  }))
 
-  // Ponto inicial (base) + um ponto cumulativo por venda
-  const points: { label: string; value: number }[] = [
-    { label: 'Início', value: countBefore },
-    ...sales.map((s, i) => ({ label: fmt.format(s.createdAt), value: countBefore + i + 1 })),
-  ]
+  const totalGeral = sales.reduce((acc, s) => acc + Number(s.total), 0)
+  const first = points[0]?.value ?? 0
+  const last = points[points.length - 1]?.value ?? 0
 
-  const total = sales.length
-  const trend = total // vendas no período (a linha cresceu esse tanto)
-
-  return NextResponse.json({ period, points, total, trend, totalGeral: countBefore + total })
+  return NextResponse.json({ period, points, total: last - first, totalGeral })
 }
