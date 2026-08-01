@@ -31,7 +31,7 @@ function defaultMonthRange(): { inicio: string; fim: string } {
   return { inicio: iso(first), fim: iso(last) }
 }
 
-export function MetaMensal() {
+export function MetaMensal({ vendidoMes }: { vendidoMes: number }) {
   const [config, setConfig] = useState<MetaConfig | null>(null)
   const [vendido, setVendido] = useState(0)
   const [editing, setEditing] = useState(false)
@@ -47,7 +47,13 @@ export function MetaMensal() {
     }
   }, [])
 
-  // busca faturamento do período de vigência
+  // vigência = mês corrente? usa o valor do servidor (mesmo dos cards, sem fuso quebrado)
+  const isDefaultRange = (cfg: MetaConfig) => {
+    const r = defaultMonthRange()
+    return cfg.inicio === r.inicio && cfg.fim === r.fim
+  }
+
+  // busca faturamento de um período customizado
   const loadFaturamento = useCallback(async (cfg: MetaConfig) => {
     try {
       const res = await fetch(`/api/analytics/faturamento?from=${cfg.inicio}&to=${cfg.fim}`)
@@ -59,9 +65,14 @@ export function MetaMensal() {
   }, [])
 
   useEffect(() => {
-    if (config && config.valor > 0) loadFaturamento(config)
-    return onRefresh(() => { if (config && config.valor > 0) loadFaturamento(config) })
-  }, [config, loadFaturamento])
+    if (!config || config.valor <= 0) return
+    if (isDefaultRange(config)) {
+      setVendido(vendidoMes) // mês corrente → server (reativo pelo refresh do dashboard)
+      return
+    }
+    loadFaturamento(config)
+    return onRefresh(() => loadFaturamento(config))
+  }, [config, vendidoMes, loadFaturamento])
 
   const startEdit = () => {
     const range = defaultMonthRange()

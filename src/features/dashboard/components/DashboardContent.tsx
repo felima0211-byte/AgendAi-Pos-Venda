@@ -28,7 +28,7 @@ export function DashboardContent() {
         onLembretesClick={() => router.push('/lembretes')}
         onPosVendaClick={() => setPosVendaOpen(true)}
       />
-      <MetaMensal />
+      <MetaMensal vendidoMes={data.vendidoMes} />
       <RecordAttendance />
       <TodayReminders reminders={data.todayReminders} />
       <RecentAtendimentos items={data.recentAtendimentos} />
