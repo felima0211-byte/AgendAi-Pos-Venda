@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth/server'
 import { prisma } from '@/lib/prisma'
 import { resolveDbUser } from '@/lib/auth/resolve-db-user'
 import { deriveDisplayStatus } from '@/services/post-sale/reminder-status'

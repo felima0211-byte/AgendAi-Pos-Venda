@@ -1,19 +1,75 @@
-import { SignUp } from '@clerk/nextjs'
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SignUpPage() {
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      // 1. cria a conta (já confirmada) no servidor
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error ?? 'Erro ao cadastrar')
+
+      // 2. loga (grava a sessão no cookie do domínio)
+      const supabase = createClient()
+      const { error: e2 } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+      if (e2) throw new Error('Conta criada. Faça login.')
+
+      router.push('/dashboard')
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao cadastrar')
+      setLoading(false)
+    }
+  }
+
   return (
-    <SignUp
-      appearance={{
-        elements: {
-          rootBox: 'w-full',
-          card: 'w-full shadow-[var(--shadow-lg)] rounded-[var(--radius-2xl)] border border-[var(--color-border)]',
-          headerTitle: 'text-[var(--color-text-primary)] font-semibold',
-          headerSubtitle: 'text-[var(--color-text-secondary)]',
-          formButtonPrimary:
-            'bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white rounded-[var(--radius-full)] font-medium transition-colors',
-          footerActionLink: 'text-[var(--color-primary)] hover:text-[var(--color-primary-dark)]',
-        },
-      }}
-    />
+    <form onSubmit={submit} className="w-full flex flex-col gap-3 bg-[var(--color-surface)] rounded-[var(--radius-2xl)] border border-[var(--color-border)] p-6">
+      <h2 className="text-base font-bold text-[var(--color-text-primary)]">Criar conta</h2>
+      <input
+        type="text" required value={name} onChange={(e) => setName(e.target.value)}
+        placeholder="Seu nome" autoComplete="name"
+        className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--color-primary)]"
+      />
+      <input
+        type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+        placeholder="E-mail" autoComplete="email"
+        className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--color-primary)]"
+      />
+      <input
+        type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+        placeholder="Senha (mín. 8 caracteres)" autoComplete="new-password"
+        className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--color-primary)]"
+      />
+      {error && <p className="text-xs text-[var(--color-error)]">{error}</p>}
+      <button
+        type="submit" disabled={loading}
+        className="flex items-center justify-center gap-2 py-3 rounded-[var(--radius-full)] bg-[var(--color-primary)] text-white text-sm font-semibold disabled:opacity-60 active:scale-[0.98]"
+      >
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar conta'}
+      </button>
+      <p className="text-[13px] text-center text-[var(--color-text-secondary)]">
+        Já tem conta?{' '}
+        <Link href="/sign-in" className="font-semibold text-[var(--color-primary)]">Entrar</Link>
+      </p>
+    </form>
   )
 }

@@ -1,28 +1,45 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
-const isPublicRoute = createRouteMatcher([
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/webhooks(.*)',
-])
+const PUBLIC = [/^\/sign-in/, /^\/sign-up/, /^\/api\/auth\//, /^\/api\/webhooks\//]
 
-const isApiRoute = createRouteMatcher(['/api(.*)', '/trpc(.*)'])
+export async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname
+  let res = NextResponse.next({ request: req })
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    const { userId } = await auth()
-    if (!userId) {
-      // API: responde 401 JSON (nunca redireciona um POST com corpo — isso quebrava o /sign-in)
-      if (isApiRoute(req)) {
-        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-      }
-      const signInUrl = new URL('/sign-in', req.url)
-      signInUrl.searchParams.set('redirect_url', req.url)
-      return NextResponse.redirect(signInUrl)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
+          res = NextResponse.next({ request: req })
+          cookiesToSet.forEach(({ name, value, options }) => res.cookies.set(name, value, options))
+        },
+      },
+    },
+  )
+
+  // IMPORTANTE: getUser() revalida e renova a sessão (grava cookies em `res`)
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const isPublic = PUBLIC.some((re) => re.test(path))
+  if (!user && !isPublic) {
+    if (path.startsWith('/api') || path.startsWith('/trpc')) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
+    const url = req.nextUrl.clone()
+    url.pathname = '/sign-in'
+    url.searchParams.set('redirect_url', path)
+    return NextResponse.redirect(url)
   }
-})
+
+  return res
+}
 
 export const config = {
   matcher: [

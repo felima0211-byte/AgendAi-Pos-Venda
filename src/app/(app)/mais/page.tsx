@@ -1,7 +1,6 @@
 'use client'
 
-import { User, Mail, Phone, IdCard, Settings, LogOut, ChevronRight } from 'lucide-react'
-import { useClerk } from '@clerk/nextjs'
+import { User, Mail, Phone, IdCard, LogOut } from 'lucide-react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { useCurrentUser } from '@/hooks/use-current-user'
 
@@ -12,9 +11,8 @@ function initials(name: string | null) {
 
 export default function MaisPage() {
   const { user, displayName, email, avatarUrl, signOut } = useCurrentUser()
-  const { openUserProfile } = useClerk()
 
-  const phone = user?.phoneNumbers?.[0]?.phoneNumber ?? null
+  const phone = user?.phone ?? null
 
   const info = [
     { icon: User, label: 'Nome', value: displayName ?? '—' },
@@ -63,17 +61,6 @@ export default function MaisPage() {
         </div>
 
         {/* Ações */}
-        <button
-          onClick={() => openUserProfile()}
-          className="mt-3 w-full flex items-center gap-3 bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] p-4 active:scale-[0.99]"
-        >
-          <span className="w-9 h-9 rounded-[var(--radius-md)] bg-[var(--color-surface-alt)] text-[var(--color-text-body)] flex items-center justify-center">
-            <Settings size={16} />
-          </span>
-          <span className="flex-1 text-left text-sm font-semibold text-[var(--color-text-primary)]">Gerenciar conta</span>
-          <ChevronRight className="w-4 h-4 text-[var(--color-divider)]" />
-        </button>
-
         <button
           onClick={signOut}
           className="mt-3 w-full flex items-center gap-3 bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] p-4 active:scale-[0.99]"
