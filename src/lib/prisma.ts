@@ -11,7 +11,8 @@ function createPrismaClient() {
   // O pooler do Supabase usa cert AWS fora da cadeia do runtime serverless → rejectUnauthorized:false.
   // A conexão segue criptografada (SSL habilitado pela config ssl).
   const cleanConn = connectionString.replace(/([?&])sslmode=[^&]*/gi, '$1').replace(/[?&]+$/g, '')
-  const adapter = new PrismaPg({ connectionString: cleanConn, ssl: { rejectUnauthorized: false } })
+  // max:1 — cada função serverless usa 1 conexão (o pooler de transação multiplexa).
+  const adapter = new PrismaPg({ connectionString: cleanConn, ssl: { rejectUnauthorized: false }, max: 1 })
 
   return new PrismaClient({
     adapter,
