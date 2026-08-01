@@ -18,8 +18,17 @@ interface ClientDetail {
   tags: string[]
   notes: string | null
   _count: { sales: number; reminders: number; interactions: number }
-  sales: Array<{ id: string; total: number; status: string; createdAt: string }>
-  interactions: Array<{ id: string; transcription: string | null; createdAt: string }>
+  sales: Array<{
+    id: string; total: number; status: string; createdAt: string
+    items: Array<{ quantity: number; unitPrice: number; product: { name: string } }>
+  }>
+  interactions: Array<{
+    id: string; type: string; createdAt: string
+    aiTranscription: string | null
+    aiSummary: string | null
+    notes: string | null
+    aiExtractedData: { produtos?: string[]; quantidades?: string[]; valorTotal?: number | null; resumo?: string | null } | null
+  }>
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -170,10 +179,20 @@ export default function ClienteDetailPage() {
             {client.sales.map(sale => (
               <div key={sale.id} className="bg-white rounded-2xl p-4 border border-gray-100">
                 <div className="flex justify-between items-center">
-                  <p className="text-sm font-semibold text-gray-900">R$ {Number(sale.total).toFixed(2).replace('.', ',')}</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {Number(sale.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
                   <span className="text-xs text-gray-400">{new Date(sale.createdAt).toLocaleDateString('pt-BR')}</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">{sale.status}</p>
+                {sale.items?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {sale.items.map((it, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600">
+                        {it.product.name} ×{it.quantity}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -184,12 +203,48 @@ export default function ClienteDetailPage() {
             {client.interactions.length === 0 && (
               <p className="text-center text-sm text-gray-400 py-10">Nenhum atendimento registrado</p>
             )}
-            {client.interactions.map(inter => (
-              <div key={inter.id} className="bg-white rounded-2xl p-4 border border-gray-100">
-                <p className="text-xs text-gray-400 mb-1">{new Date(inter.createdAt).toLocaleDateString('pt-BR')}</p>
-                <p className="text-sm text-gray-700 line-clamp-3">{inter.transcription ?? 'Sem transcrição'}</p>
-              </div>
-            ))}
+            {client.interactions.map(inter => {
+              const transcricao = inter.aiTranscription ?? inter.notes
+              const resumo = inter.aiSummary ?? inter.aiExtractedData?.resumo
+              const produtos = inter.aiExtractedData?.produtos ?? []
+              const valor = inter.aiExtractedData?.valorTotal
+              return (
+                <div key={inter.id} className="bg-white rounded-2xl p-4 border border-gray-100">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-violet-600">
+                      {inter.type === 'AUDIO_NOTE' ? <Mic className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                      {inter.type === 'AUDIO_NOTE' ? 'Áudio' : 'Atendimento'}
+                    </span>
+                    <span className="text-xs text-gray-400">{new Date(inter.createdAt).toLocaleDateString('pt-BR')}</span>
+                  </div>
+
+                  {resumo && <p className="text-sm font-medium text-gray-900 mb-1">{resumo}</p>}
+
+                  {/* O que foi dito e transcrito */}
+                  {transcricao && (
+                    <div className="mt-1.5 rounded-xl bg-gray-50 p-2.5">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Transcrição</p>
+                      <p className="text-[13px] text-gray-700 leading-relaxed whitespace-pre-line">{transcricao}</p>
+                    </div>
+                  )}
+
+                  {(produtos.length > 0 || valor) && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {produtos.map((p, i) => (
+                        <span key={i} className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600">{p}</span>
+                      ))}
+                      {!!valor && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
+                          {Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {!transcricao && !resumo && <p className="text-sm text-gray-400">Sem transcrição.</p>}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
