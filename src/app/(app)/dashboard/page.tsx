@@ -1,15 +1,14 @@
-import { DashboardHeader } from '@/features/dashboard/components/DashboardHeader'
-import { DashboardContent } from '@/features/dashboard/components/DashboardContent'
-import { BottomNav } from '@/components/layout/BottomNav'
+import { auth } from '@/lib/auth/server'
+import { resolveDbUser } from '@/lib/auth/resolve-db-user'
+import { getDashboardData } from '@/features/dashboard/get-dashboard-data'
+import { DashboardScreen } from '@/features/dashboard/components/DashboardScreen'
 
-export default function DashboardPage() {
-  return (
-    <div className="flex flex-col min-h-dvh bg-[var(--color-background)]">
-      <main className="flex-1 overflow-y-auto pb-24">
-        <DashboardHeader />
-        <DashboardContent />
-      </main>
-      <BottomNav />
-    </div>
-  )
+export const dynamic = 'force-dynamic'
+
+export default async function DashboardPage() {
+  const { userId } = await auth()
+  const dbUser = userId ? await resolveDbUser(userId) : null
+  const initial = dbUser ? await getDashboardData(dbUser.id) : null
+
+  return <DashboardScreen initial={initial} />
 }

@@ -38,7 +38,7 @@ export function RecordAttendance() {
         )}
       >
         <Mic size={18} />
-        Gravar áudio
+        Registrar atendimento
       </button>
 
       <RegistrarAtendimentoSheet open={open} onClose={() => setOpen(false)} />

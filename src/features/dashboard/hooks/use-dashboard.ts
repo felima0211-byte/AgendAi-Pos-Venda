@@ -47,6 +47,11 @@ const EMPTY: DashboardData = {
 // Cache em módulo: Header e Content compartilham o último dado (evita "zerar e voltar")
 let cache: DashboardData = EMPTY
 
+/** Semeia o cache com o dado renderizado no servidor (SSR) — primeiro paint já vem preenchido. */
+export function seedDashboard(d: DashboardData) {
+  cache = d
+}
+
 export function useDashboard() {
   const [data, setData] = useState<DashboardData>(cache)
   const [loading, setLoading] = useState(cache === EMPTY)
