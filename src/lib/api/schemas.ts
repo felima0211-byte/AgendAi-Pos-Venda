@@ -35,6 +35,7 @@ export const assistantChatSchema = z.object({
 export const textAtendimentoSchema = z.object({
   clientId: z.string().cuid().optional().nullable(),
   text: trimmed(4000),
+  valorTotal: z.number().positive().optional().nullable(),
 })
 
 export const generateMessageSchema = z.object({

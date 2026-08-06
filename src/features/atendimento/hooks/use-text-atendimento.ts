@@ -14,7 +14,7 @@ export function useTextAtendimento() {
   const [result, setResult] = useState<TextResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const submit = useCallback(async (text: string, clientId?: string) => {
+  const submit = useCallback(async (text: string, clientId?: string, valorTotal?: number | null) => {
     setState('saving')
     setError(null)
     setResult(null)
@@ -22,7 +22,11 @@ export function useTextAtendimento() {
       const res = await fetch('/api/atendimento/text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, clientId: clientId ?? undefined }),
+        body: JSON.stringify({
+          text,
+          clientId: clientId ?? undefined,
+          ...(valorTotal != null && valorTotal > 0 ? { valorTotal } : {}),
+        }),
       })
       const contentType = res.headers.get('content-type') ?? ''
       if (!contentType.includes('application/json')) {

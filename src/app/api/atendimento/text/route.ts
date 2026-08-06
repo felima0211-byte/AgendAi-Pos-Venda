@@ -22,7 +22,7 @@ import {
 export const POST = withAuth(
   { bodySchema: textAtendimentoSchema, rateLimit: { name: 'atendimento-text', limit: 20, windowMs: 60_000 } },
   async ({ userId, body }) => {
-    const { clientId, text } = body
+    const { clientId, text, valorTotal: valorTotalBody } = body
 
     // ── Resolver cliente (posse) ou usar "Atendimento Avulso" ──
     let resolvedClientId = clientId ?? null
@@ -89,6 +89,7 @@ export const POST = withAuth(
         clientId: resolvedClientId!,
         extracted: extractedData,
         fallbackNote: text,
+        valorTotalOverride: valorTotalBody ?? null,
       })
       await prisma.interaction.update({ where: { id: interaction.id }, data: { saleId: sale.saleId } })
       saleCreated = true

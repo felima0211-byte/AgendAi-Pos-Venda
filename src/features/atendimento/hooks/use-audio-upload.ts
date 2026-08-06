@@ -7,6 +7,7 @@ interface UploadOptions {
   clientId?: string
   saleId?: string
   notes?: string
+  valorTotal?: number | null
 }
 
 interface UseAudioUploadReturn {
@@ -40,6 +41,7 @@ export function useAudioUpload(): UseAudioUploadReturn {
         if (options?.clientId) formData.append('clientId', options.clientId)
         if (options?.saleId) formData.append('saleId', options.saleId)
         if (options?.notes) formData.append('notes', options.notes)
+        if (options?.valorTotal != null && options.valorTotal > 0) formData.append('valorTotal', String(options.valorTotal))
 
         setUploadProgress(30)
 

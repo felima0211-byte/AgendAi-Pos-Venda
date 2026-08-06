@@ -51,6 +51,8 @@ export async function POST(req: NextRequest) {
   const clientId = formData.get('clientId') as string | null
   const saleId = formData.get('saleId') as string | null
   const notes = formData.get('notes') as string | null
+  const valorTotalRaw = formData.get('valorTotal') as string | null
+  const valorTotalOverride = valorTotalRaw ? parseFloat(valorTotalRaw) : null
 
   if (!file || file.size === 0) {
     return NextResponse.json({ error: 'Arquivo de áudio ausente' }, { status: 400 })
@@ -262,6 +264,7 @@ export async function POST(req: NextRequest) {
           clientId: resolvedClientId,
           extracted: extractedData,
           fallbackNote: transcriptionText,
+          valorTotalOverride: valorTotalOverride,
         })
         await prisma.interaction.update({ where: { id: interaction.id }, data: { saleId: sale.saleId } })
         saleCreated = true

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X, Mic, Type, ShieldCheck, CheckCircle2, Loader2, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTextAtendimento } from '../hooks/use-text-atendimento'
+import { ValorVendaPopup } from './ValorVendaPopup'
 import { emitRefresh } from '@/lib/refresh-bus'
 
 interface RegistrarAtendimentoSheetProps {
@@ -20,6 +21,7 @@ export function RegistrarAtendimentoSheet({ open, onClose, clientId, onRegistere
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('choice')
   const [text, setText] = useState('')
+  const [showValorPopup, setShowValorPopup] = useState(false)
   const { state, result, error, submit, reset } = useTextAtendimento()
 
   if (!open) return null
@@ -36,9 +38,14 @@ export function RegistrarAtendimentoSheet({ open, onClose, clientId, onRegistere
     router.push(`/atendimento${q}`)
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (text.trim().length < 3) return
-    const r = await submit(text, clientId)
+    setShowValorPopup(true)
+  }
+
+  const handleValorConfirm = async (valor: number | null) => {
+    setShowValorPopup(false)
+    const r = await submit(text, clientId, valor ?? undefined)
     if (r) {
       emitRefresh()
       onRegistered?.()
@@ -46,6 +53,7 @@ export function RegistrarAtendimentoSheet({ open, onClose, clientId, onRegistere
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-[400] flex items-end">
       <div className="absolute inset-0 bg-black/40 animate-fade-in" onClick={close} />
       <div className="relative w-full bg-[var(--color-surface)] rounded-t-3xl max-h-[90vh] flex flex-col animate-slide-up">
@@ -187,5 +195,8 @@ export function RegistrarAtendimentoSheet({ open, onClose, clientId, onRegistere
         </div>
       </div>
     </div>
+
+    {showValorPopup && <ValorVendaPopup onConfirm={handleValorConfirm} />}
+  </>
   )
 }

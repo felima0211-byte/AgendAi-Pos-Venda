@@ -23,12 +23,15 @@ export async function registerSaleFromExtraction(
     clientId: string
     extracted: AiExtractedData | null
     fallbackNote?: string | null
+    valorTotalOverride?: number | null
   },
 ): Promise<{ saleId: string; itemsCreated: number; valorTotal: number }> {
-  const { userId, clientId, extracted, fallbackNote } = params
+  const { userId, clientId, extracted, fallbackNote, valorTotalOverride } = params
   const produtos = extracted?.produtos ?? []
   const quantidades = extracted?.quantidades ?? []
-  const valorTotal = extracted?.valorTotal ?? 0
+  const valorTotal = (valorTotalOverride != null && valorTotalOverride > 0)
+    ? valorTotalOverride
+    : (extracted?.valorTotal ?? 0)
 
   // quantidade total (para ratear o valor por unidade entre os itens)
   const totalQty = produtos.reduce((acc, _p, i) => acc + parseQuantity(quantidades[i]), 0)

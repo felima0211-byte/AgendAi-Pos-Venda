@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { CheckCircle2, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAudioRecorder } from '@/hooks/use-audio-recorder'
 import { useAudioUpload } from '../hooks/use-audio-upload'
 import { AudioRecorder } from './AudioRecorder'
 import { AudioPreview } from './AudioPreview'
+import { ValorVendaPopup } from './ValorVendaPopup'
 import { emitRefresh } from '@/lib/refresh-bus'
 
 interface RecordAtendimentoPageProps {
@@ -17,12 +19,19 @@ export function RecordAtendimentoPage({ clientId, saleId }: RecordAtendimentoPag
   const router = useRouter()
   const recorder = useAudioRecorder()
   const uploader = useAudioUpload()
+  const [showValorPopup, setShowValorPopup] = useState(false)
 
   const hasStopped = recorder.state === 'stopped' && !!recorder.audioBlob
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!recorder.audioBlob) return
-    await uploader.upload(recorder.audioBlob, recorder.mimeType, { clientId, saleId })
+    setShowValorPopup(true)
+  }
+
+  const handleValorConfirm = async (valor: number | null) => {
+    setShowValorPopup(false)
+    if (!recorder.audioBlob) return
+    await uploader.upload(recorder.audioBlob, recorder.mimeType, { clientId, saleId, valorTotal: valor })
     emitRefresh()
   }
 
@@ -86,6 +95,8 @@ export function RecordAtendimentoPage({ clientId, saleId }: RecordAtendimentoPag
             onSend={handleSend}
           />
         )}
+
+        {showValorPopup && <ValorVendaPopup onConfirm={handleValorConfirm} />}
 
         {/* Success state */}
         {uploader.uploadState === 'success' && (
