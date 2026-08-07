@@ -20,10 +20,13 @@ export interface DashboardData {
   overdueReminders: Array<{
     id: string
     title: string
+    clientId: string
     clientName: string
+    clientPhone: string | null
     dueAt: string
     priority: 'LOW' | 'MEDIUM' | 'HIGH'
     daysOverdue: number
+    kind: string
   }>
   aiInsights: Array<{ id: string; body: string; clientName: string }>
   recentAtendimentos: Array<{

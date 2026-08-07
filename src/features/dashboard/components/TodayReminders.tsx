@@ -2,9 +2,20 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Bell, CheckCircle2, Clock, ChevronDown } from 'lucide-react'
+import { Bell, CheckCircle2, Clock, ChevronDown, Sparkles } from 'lucide-react'
 import { emitRefresh } from '@/lib/refresh-bus'
+import { MessageGeneratorSheet } from '@/features/mensagens/components/MessageGeneratorSheet'
 import type { DashboardData } from '../hooks/use-dashboard'
+
+const KIND_TO_MESSAGE: Record<string, 'POST_SALE' | 'REPURCHASE' | 'REMINDER' | 'CUSTOM'> = {
+  POST_SALE_CHECK: 'POST_SALE',
+  EXCHANGE_CHECK: 'POST_SALE',
+  RECOMMEND: 'REPURCHASE',
+  SIZE_UPDATE: 'REPURCHASE',
+  REACTIVATE: 'REMINDER',
+  WINBACK: 'REPURCHASE',
+  CUSTOM: 'CUSTOM',
+}
 
 const LIMIT = 3
 
@@ -19,6 +30,7 @@ async function patchReminder(id: string, body: object) {
 
 function OverdueCard({ r }: { r: DashboardData['overdueReminders'][number] }) {
   const [snoozOpen, setSnoozOpen] = useState(false)
+  const [msgOpen, setMsgOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const complete = async () => {
@@ -58,13 +70,20 @@ function OverdueCard({ r }: { r: DashboardData['overdueReminders'][number] }) {
           Concluir
         </button>
 
+        <button
+          onClick={() => setMsgOpen(true)}
+          className="flex items-center justify-center gap-1 py-1.5 px-3 rounded-lg bg-violet-50 text-violet-600 text-xs font-semibold active:scale-[0.97]"
+        >
+          <Sparkles size={13} />
+          Mensagem
+        </button>
+
         <div className="relative">
           <button
             onClick={() => setSnoozOpen((v) => !v)}
-            className="flex items-center gap-1 py-1.5 px-3 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs font-semibold active:scale-[0.97]"
+            className="flex items-center gap-1 py-1.5 px-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs font-semibold active:scale-[0.97]"
           >
             <Clock size={13} />
-            Adiar
             <ChevronDown size={12} className={snoozOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
           </button>
 
@@ -83,6 +102,15 @@ function OverdueCard({ r }: { r: DashboardData['overdueReminders'][number] }) {
           )}
         </div>
       </div>
+
+      <MessageGeneratorSheet
+        open={msgOpen}
+        clientId={r.clientId}
+        clientPhone={r.clientPhone}
+        defaultType={KIND_TO_MESSAGE[r.kind] ?? 'POST_SALE'}
+        reminderId={r.id}
+        onClose={() => setMsgOpen(false)}
+      />
     </div>
   )
 }

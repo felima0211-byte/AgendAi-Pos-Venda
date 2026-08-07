@@ -19,7 +19,7 @@ const LEFT_ITEMS: NavItem[] = [
 ]
 
 const RIGHT_ITEMS: NavItem[] = [
-  { href: '/lembretes', label: 'Lembretes', icon: Bell },
+  { href: '/lembretes', label: 'Pós Venda', icon: Bell },
   { href: '/mais', label: 'Mais', icon: MoreHorizontal },
 ]
 

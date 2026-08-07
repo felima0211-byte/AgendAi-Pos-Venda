@@ -19,7 +19,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     prisma.reminder.findMany({
       where: { ...reminderScope, status: { in: ['PENDING', 'SNOOZED'] } },
       orderBy: { dueAt: 'asc' },
-      include: { client: { select: { name: true } } },
+      include: { client: { select: { id: true, name: true, phone: true } } },
     }),
     prisma.sale.aggregate({
       _sum: { total: true },
@@ -35,12 +35,12 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const today = withDisplay.filter((r) => r.display === 'today')
 
   const todayReminders = today.map((r) => ({
-    id: r.id, title: r.title, clientName: r.client.name, dueAt: 'Hoje', priority: r.priority,
+    id: r.id, title: r.title, clientName: r.client.name, dueAt: 'Hoje', priority: r.priority, clientId: r.client.id, clientPhone: r.client.phone,
   }))
 
   const overdueReminders = overdue.map((r) => {
     const diffDays = Math.max(1, Math.floor((now.getTime() - new Date(r.dueAt).getTime()) / 86_400_000))
-    return { id: r.id, title: r.title, clientName: r.client.name, dueAt: r.dueAt.toISOString(), priority: r.priority, daysOverdue: diffDays }
+    return { id: r.id, title: r.title, clientId: r.client.id, clientName: r.client.name, clientPhone: r.client.phone ?? null, dueAt: r.dueAt.toISOString(), priority: r.priority, daysOverdue: diffDays, kind: r.kind }
   })
 
   const insightEvents = await prisma.timelineEvent.findMany({
