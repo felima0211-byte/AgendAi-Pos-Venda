@@ -51,7 +51,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     case 'snooze': {
-      const days = Number(body.days) || 1
+      const raw = Number(body.days)
+      const days = Number.isFinite(raw) && raw >= 1 && raw <= 365 ? Math.floor(raw) : 1
       const base = new Date(reminder.dueAt) < new Date() ? new Date() : new Date(reminder.dueAt)
       const updated = await prisma.reminder.update({
         where: { id },
@@ -78,13 +79,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     case 'edit': {
       const { title, body: reminderBody, dueAt, priority } = body
+      const VALID_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH']
+      const parsedDueAt = dueAt ? new Date(dueAt) : null
       const updated = await prisma.reminder.update({
         where: { id },
         data: {
-          ...(title && { title: title.trim() }),
-          ...(reminderBody !== undefined && { body: reminderBody?.trim() ?? null }),
-          ...(dueAt && { dueAt: new Date(dueAt) }),
-          ...(priority && { priority }),
+          ...(title && typeof title === 'string' && { title: title.trim().slice(0, 255) }),
+          ...(reminderBody !== undefined && { body: typeof reminderBody === 'string' ? reminderBody.trim().slice(0, 1000) : null }),
+          ...(parsedDueAt && !isNaN(parsedDueAt.getTime()) && { dueAt: parsedDueAt }),
+          ...(priority && VALID_PRIORITIES.includes(priority) && { priority }),
         },
       })
       return NextResponse.json(updated)
