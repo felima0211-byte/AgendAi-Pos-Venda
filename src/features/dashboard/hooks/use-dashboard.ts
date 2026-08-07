@@ -17,6 +17,14 @@ export interface DashboardData {
     dueAt: string
     priority: 'LOW' | 'MEDIUM' | 'HIGH'
   }>
+  overdueReminders: Array<{
+    id: string
+    title: string
+    clientName: string
+    dueAt: string
+    priority: 'LOW' | 'MEDIUM' | 'HIGH'
+    daysOverdue: number
+  }>
   aiInsights: Array<{ id: string; body: string; clientName: string }>
   recentAtendimentos: Array<{
     id: string
@@ -38,6 +46,7 @@ const EMPTY: DashboardData = {
     posVendas: { total: 0, status: 'Em dia' },
   },
   todayReminders: [],
+  overdueReminders: [],
   aiInsights: [],
   recentAtendimentos: [],
   itensVendidos: [],

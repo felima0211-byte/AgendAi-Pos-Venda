@@ -30,7 +30,7 @@ export function DashboardContent() {
       />
       <MetaMensal vendidoMes={data.vendidoMes} />
       <RecordAttendance />
-      <TodayReminders reminders={data.todayReminders} />
+      <TodayReminders reminders={data.todayReminders} overdueReminders={data.overdueReminders} />
       <RecentAtendimentos items={data.recentAtendimentos} />
       <ItensVendidos items={data.itensVendidos} />
       <SalesDashboard />

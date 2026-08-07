@@ -38,6 +38,11 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     id: r.id, title: r.title, clientName: r.client.name, dueAt: 'Hoje', priority: r.priority,
   }))
 
+  const overdueReminders = overdue.map((r) => {
+    const diffDays = Math.max(1, Math.floor((now.getTime() - new Date(r.dueAt).getTime()) / 86_400_000))
+    return { id: r.id, title: r.title, clientName: r.client.name, dueAt: r.dueAt.toISOString(), priority: r.priority, daysOverdue: diffDays }
+  })
+
   const insightEvents = await prisma.timelineEvent.findMany({
     where: { type: 'AI_INSIGHT', aiInsight: { not: null }, client: { userId, deletedAt: null } },
     orderBy: { createdAt: 'desc' },
@@ -81,6 +86,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       },
     },
     todayReminders,
+    overdueReminders,
     aiInsights,
     recentAtendimentos,
     itensVendidos,
