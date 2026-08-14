@@ -45,13 +45,18 @@ function Loading({ size = 'md', fullScreen, inline, label, className }: LoadingP
   )
 }
 
-function LoadingPage({ label = 'Carregando...' }: { label?: string }) {
+function LoadingPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-      <div className="w-12 h-12 rounded-[var(--radius-2xl)] bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-[var(--shadow-primary)]">
-        <Loader2 size={24} className="animate-spin text-white" />
-      </div>
-      <p className="text-sm text-[var(--color-text-secondary)]">{label}</p>
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{ width: 160, height: 160, objectFit: 'contain', mixBlendMode: 'multiply' }}
+      >
+        <source src="/loading.mp4" type="video/mp4" />
+      </video>
     </div>
   )
 }
