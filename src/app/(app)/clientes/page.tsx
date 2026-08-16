@@ -7,6 +7,7 @@ import { SearchBar } from '@/features/clientes/components/SearchBar'
 import { FilterDrawer } from '@/features/clientes/components/FilterDrawer'
 import { NewClientModal } from '@/features/clientes/components/NewClientModal'
 import { SmartSearchSheet } from '@/features/clientes/components/SmartSearchSheet'
+import { NovaVendaModal } from '@/features/clientes/components/NovaVendaModal'
 import { useClients } from '@/features/clientes/hooks/use-clients'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { useRouter } from 'next/navigation'
@@ -19,6 +20,7 @@ export default function ClientesPage() {
   const [filterOpen, setFilterOpen] = useState(false)
   const [newOpen, setNewOpen] = useState(false)
   const [smartOpen, setSmartOpen] = useState(false)
+  const [novaVendaClient, setNovaVendaClient] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => { fetch('', '', true) }, [fetch])
 
@@ -86,6 +88,7 @@ export default function ClientesPage() {
             key={client.id}
             client={client}
             onClick={() => router.push(`/clientes/${client.id}`)}
+            onNovaVenda={(e) => { e.stopPropagation(); setNovaVendaClient({ id: client.id, name: client.name }) }}
           />
         ))}
 
@@ -130,6 +133,16 @@ export default function ClientesPage() {
       />
 
       <SmartSearchSheet open={smartOpen} onClose={() => setSmartOpen(false)} />
+
+      {novaVendaClient && (
+        <NovaVendaModal
+          open={!!novaVendaClient}
+          clientId={novaVendaClient.id}
+          clientName={novaVendaClient.name}
+          onClose={() => setNovaVendaClient(null)}
+          onSaved={() => { setNovaVendaClient(null); refresh() }}
+        />
+      )}
     </div>
   )
 }

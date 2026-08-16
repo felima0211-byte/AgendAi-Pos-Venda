@@ -1,6 +1,6 @@
 'use client'
 
-import { Phone, MapPin, ShoppingBag, Star } from 'lucide-react'
+import { Phone, MapPin, ShoppingBag, Star, Plus } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import type { ClientSummary } from '../hooks/use-clients'
 
@@ -21,9 +21,10 @@ const STATUS_LABEL: Record<string, string> = {
 interface ClientCardProps {
   client: ClientSummary
   onClick?: () => void
+  onNovaVenda?: (e: React.MouseEvent) => void
 }
 
-export function ClientCard({ client, onClick }: ClientCardProps) {
+export function ClientCard({ client, onClick, onNovaVenda }: ClientCardProps) {
   const lastSale = client.sales[0]
   const initials = client.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
 
@@ -83,6 +84,15 @@ export function ClientCard({ client, onClick }: ClientCardProps) {
               ))}
             </div>
           )}
+
+          {/* Botão nova venda */}
+          <button
+            onClick={onNovaVenda}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl font-semibold text-xs active:scale-[0.97] transition-transform"
+            style={{ backgroundColor: '#6C4CF0', color: '#fff' }}
+          >
+            <Plus size={13} strokeWidth={2.5} /> Nova venda
+          </button>
         </div>
       </div>
     </button>
