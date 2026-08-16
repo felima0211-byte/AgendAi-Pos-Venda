@@ -14,6 +14,7 @@ interface Alerta {
 export function AlertasOportunidade() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [loading, setLoading] = useState(true)
+  const [isNovo, setIsNovo] = useState(true)
 
   useEffect(() => {
     fetch('/api/dashboard/oportunidades')
@@ -23,10 +24,26 @@ export function AlertasOportunidade() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    if (!isNovo) return
+    const t = setTimeout(() => setIsNovo(false), 5000)
+    return () => clearTimeout(t)
+  }, [isNovo])
+
   if (loading || alertas.length === 0) return null
 
   return (
-    <div className="mx-4 mb-4">
+    <div className="mx-4 mb-4 relative">
+      {/* Badge novidade */}
+      {isNovo && (
+        <span
+          className="absolute -top-2 -right-1 z-10 px-2 py-0.5 rounded-full text-white text-[10px] font-bold uppercase tracking-wide"
+          style={{ backgroundColor: '#C46A1F' }}
+        >
+          Novo
+        </span>
+      )}
+
       <div className="flex items-center gap-2 mb-2 px-1">
         <Bell size={14} style={{ color: '#C46A1F' }} />
         <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#C46A1F' }}>
