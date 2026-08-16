@@ -49,7 +49,18 @@ function formatarDataHora(date: Date): string {
 export function DicaDoDia() {
   const [indice, setIndice] = useState(getIndiceHora)
   const [atualizadoEm, setAtualizadoEm] = useState<Date>(new Date())
-  const [isNovo, setIsNovo] = useState(true) // permanece true o dia todo
+  const [isNovo, setIsNovo] = useState(() => {
+    if (typeof window === 'undefined') return true
+    const visto = localStorage.getItem('novidade_dica_do_dia')
+    if (!visto) return true
+    return Date.now() - Number(visto) < 24 * 60 * 60 * 1000
+  })
+
+  useEffect(() => {
+    if (isNovo && !localStorage.getItem('novidade_dica_do_dia')) {
+      localStorage.setItem('novidade_dica_do_dia', String(Date.now()))
+    }
+  }, [isNovo])
 
   // Troca automática a cada hora
   useEffect(() => {
