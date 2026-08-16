@@ -47,7 +47,7 @@ export function SalesDashboard() {
   const coords = data.points.map((p, i) => {
     const x = data.points.length > 1 ? PAD_X + (i / (data.points.length - 1)) * (W - PAD_X * 2) : W / 2
     const y = H - PAD_Y - ((p.value - minV) / span) * (H - PAD_Y * 2)
-    return { x, y, value: p.value, label: p.label ?? '' }
+    return { x, y, value: p.value, label: p.t ?? '' }
   })
 
   const linePath = smoothPath(coords)
