@@ -12,6 +12,8 @@ import { MetaMensal } from './MetaMensal'
 import { useDashboard } from '../hooks/use-dashboard'
 import { PosVendaSheet } from '@/features/pos-venda/components/PosVendaSheet'
 import { VendasSheet } from './VendasSheet'
+import { DicaDoDia } from './DicaDoDia'
+import { AlertasOportunidade } from './AlertasOportunidade'
 
 export function DashboardContent() {
   const { data } = useDashboard()
@@ -21,6 +23,8 @@ export function DashboardContent() {
 
   return (
     <>
+      <DicaDoDia />
+      <AlertasOportunidade />
       <StatsGrid
         stats={data.stats}
         onClientesClick={() => router.push('/clientes')}
