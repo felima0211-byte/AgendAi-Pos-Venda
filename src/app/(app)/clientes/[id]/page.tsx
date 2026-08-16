@@ -6,6 +6,7 @@ import { ArrowLeft, Phone, Mail, MapPin, Edit2, Trash2, ShoppingBag, Clock, Mic,
 import { TimelineList } from '@/features/timeline/components/TimelineList'
 import { EditClientModal } from '@/features/clientes/components/EditClientModal'
 import { MessageGeneratorSheet } from '@/features/mensagens/components/MessageGeneratorSheet'
+import { NovaVendaModal } from '@/features/clientes/components/NovaVendaModal'
 
 interface ClientDetail {
   id: string
@@ -43,6 +44,7 @@ export default function ClienteDetailPage() {
   const [tab, setTab] = useState<'timeline' | 'vendas' | 'atendimentos'>('timeline')
   const [editOpen, setEditOpen] = useState(false)
   const [messageOpen, setMessageOpen] = useState(false)
+  const [novaVendaOpen, setNovaVendaOpen] = useState(false)
 
   const loadClient = () => {
     setLoading(true)
@@ -128,13 +130,23 @@ export default function ClienteDetailPage() {
           )}
         </div>
 
-        {/* Gerar mensagem com IA (Fatia 12) */}
-        <button
-          onClick={() => setMessageOpen(true)}
-          className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-violet-600 text-white font-semibold text-sm active:scale-[0.98]"
-        >
-          <Sparkles className="w-4 h-4" /> Gerar mensagem
-        </button>
+        {/* Ações principais */}
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={() => setNovaVendaOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold text-sm active:scale-[0.98]"
+            style={{ backgroundColor: '#6C4CF0' }}
+          >
+            <ShoppingBag className="w-4 h-4" /> Nova venda
+          </button>
+          <button
+            onClick={() => setMessageOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.98]"
+            style={{ backgroundColor: '#EDE9FD', color: '#6C4CF0' }}
+          >
+            <Sparkles className="w-4 h-4" /> Mensagem
+          </button>
+        </div>
 
         {/* Stats */}
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -173,8 +185,15 @@ export default function ClienteDetailPage() {
 
         {tab === 'vendas' && (
           <div className="space-y-3">
+            <button
+              onClick={() => setNovaVendaOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm mb-1"
+              style={{ backgroundColor: '#EDE9FD', color: '#6C4CF0' }}
+            >
+              <ShoppingBag className="w-4 h-4" /> Adicionar nova venda
+            </button>
             {client.sales.length === 0 && (
-              <p className="text-center text-sm text-gray-400 py-10">Nenhuma venda registrada</p>
+              <p className="text-center text-sm text-gray-400 py-6">Nenhuma venda registrada</p>
             )}
             {client.sales.map(sale => (
               <div key={sale.id} className="bg-white rounded-2xl p-4 border border-gray-100">
@@ -260,6 +279,14 @@ export default function ClienteDetailPage() {
           status: client.status,
         }}
         onClose={() => setEditOpen(false)}
+        onSaved={loadClient}
+      />
+
+      <NovaVendaModal
+        open={novaVendaOpen}
+        clientId={client.id}
+        clientName={client.name}
+        onClose={() => setNovaVendaOpen(false)}
         onSaved={loadClient}
       />
 
