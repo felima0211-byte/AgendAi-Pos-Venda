@@ -122,9 +122,15 @@ interface Props {
 
 export function TodayReminders({ reminders, overdueReminders }: Props) {
   const [expanded, setExpanded] = useState(false)
-  const visibleToday = expanded ? reminders : reminders.slice(0, Math.max(0, LIMIT - overdueReminders.length))
-  const total = reminders.length + overdueReminders.length
-  const hiddenCount = total - overdueReminders.length - visibleToday.length
+  const allOverdue = overdueReminders
+  const allToday = reminders
+  const total = allOverdue.length + allToday.length
+
+  // Limita overdue primeiro, depois preenche com hoje até LIMIT
+  const visibleOverdue = expanded ? allOverdue : allOverdue.slice(0, LIMIT)
+  const remainingSlots = expanded ? allToday.length : Math.max(0, LIMIT - visibleOverdue.length)
+  const visibleToday = allToday.slice(0, remainingSlots)
+  const hiddenCount = total - visibleOverdue.length - visibleToday.length
 
   if (total === 0) {
     return (
@@ -158,7 +164,7 @@ export function TodayReminders({ reminders, overdueReminders }: Props) {
       </div>
 
       <div className="flex flex-col gap-2">
-        {overdueReminders.map((r) => (
+        {visibleOverdue.map((r) => (
           <OverdueCard key={r.id} r={r} />
         ))}
 
