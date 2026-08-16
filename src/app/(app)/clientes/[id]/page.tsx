@@ -41,7 +41,7 @@ export default function ClienteDetailPage() {
   const router = useRouter()
   const [client, setClient] = useState<ClientDetail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'timeline' | 'vendas' | 'atendimentos'>('timeline')
+  const [tab, setTab] = useState<'timeline' | 'vendas' | 'atendimentos'>('vendas')
   const [editOpen, setEditOpen] = useState(false)
   const [messageOpen, setMessageOpen] = useState(false)
   const [novaVendaOpen, setNovaVendaOpen] = useState(false)
@@ -166,15 +166,19 @@ export default function ClienteDetailPage() {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-100 bg-white sticky top-0 z-10">
-        {(['timeline', 'vendas', 'atendimentos'] as const).map(t => (
+        {([
+          { key: 'vendas', label: 'Vendas' },
+          { key: 'atendimentos', label: 'Atendimentos' },
+          { key: 'timeline', label: 'Timeline' },
+        ] as const).map(({ key: t, label }) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-3 text-xs font-semibold capitalize transition-colors ${
+            className={`flex-1 py-3 text-xs font-semibold transition-colors ${
               tab === t ? 'text-violet-600 border-b-2 border-violet-600' : 'text-gray-400'
             }`}
           >
-            {t}
+            {label}
           </button>
         ))}
       </div>
@@ -184,36 +188,57 @@ export default function ClienteDetailPage() {
         {tab === 'timeline' && <TimelineList clientId={id} />}
 
         {tab === 'vendas' && (
-          <div className="space-y-3">
+          <div>
             <button
               onClick={() => setNovaVendaOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm mb-1"
-              style={{ backgroundColor: '#EDE9FD', color: '#6C4CF0' }}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm mb-4"
+              style={{ backgroundColor: '#6C4CF0', color: '#fff' }}
             >
-              <ShoppingBag className="w-4 h-4" /> Adicionar nova venda
+              <ShoppingBag className="w-4 h-4" /> + Nova venda
             </button>
-            {client.sales.length === 0 && (
-              <p className="text-center text-sm text-gray-400 py-6">Nenhuma venda registrada</p>
-            )}
-            {client.sales.map(sale => (
-              <div key={sale.id} className="bg-white rounded-2xl p-4 border border-gray-100">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-semibold text-gray-900">
-                    {Number(sale.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </p>
-                  <span className="text-xs text-gray-400">{new Date(sale.createdAt).toLocaleDateString('pt-BR')}</span>
+
+            {client.sales.length === 0 ? (
+              <p className="text-center text-sm text-gray-400 py-8">Nenhuma venda registrada</p>
+            ) : (
+              <div className="relative">
+                {/* Linha vertical da timeline */}
+                <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-gray-100" />
+
+                <div className="space-y-4">
+                  {client.sales.map(sale => (
+                    <div key={sale.id} className="flex gap-4 items-start">
+                      {/* Ponto da timeline */}
+                      <div className="shrink-0 w-6 h-6 rounded-full border-2 border-violet-400 bg-white flex items-center justify-center z-10">
+                        <ShoppingBag className="w-3 h-3 text-violet-400" />
+                      </div>
+
+                      <div className="flex-1 bg-white rounded-2xl p-4 border border-gray-100 -mt-1">
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                            {new Date(sale.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                          </span>
+                          <span className="text-sm font-bold text-violet-600 shrink-0">
+                            {Number(sale.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        </div>
+
+                        {sale.items?.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {sale.items.map((it, i) => (
+                              <span key={i} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600">
+                                {it.product.name} ×{it.quantity}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 mt-1">Venda registrada</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {sale.items?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {sale.items.map((it, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600">
-                        {it.product.name} ×{it.quantity}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
-            ))}
+            )}
           </div>
         )}
 
