@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
       body: itens.length
         ? itens.map(i => `${i.name} ×${i.quantity}`).join(', ')
         : (observacao ?? 'Venda manual'),
-      amount: total,
     },
   })
 
