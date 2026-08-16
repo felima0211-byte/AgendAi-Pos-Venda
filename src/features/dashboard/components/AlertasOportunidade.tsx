@@ -14,7 +14,7 @@ interface Alerta {
 export function AlertasOportunidade() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [loading, setLoading] = useState(true)
-  const [isNovo, setIsNovo] = useState(true)
+  const isNovo = true // badge visível o dia todo
 
   useEffect(() => {
     fetch('/api/dashboard/oportunidades')
@@ -23,12 +23,6 @@ export function AlertasOportunidade() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
-
-  useEffect(() => {
-    if (!isNovo) return
-    const t = setTimeout(() => setIsNovo(false), 5000)
-    return () => clearTimeout(t)
-  }, [isNovo])
 
   if (loading || alertas.length === 0) return null
 

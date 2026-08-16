@@ -49,7 +49,7 @@ function formatarDataHora(date: Date): string {
 export function DicaDoDia() {
   const [indice, setIndice] = useState(getIndiceHora)
   const [atualizadoEm, setAtualizadoEm] = useState<Date>(new Date())
-  const [isNovo, setIsNovo] = useState(true)
+  const [isNovo, setIsNovo] = useState(true) // permanece true o dia todo
 
   // Troca automática a cada hora
   useEffect(() => {
@@ -66,13 +66,6 @@ export function DicaDoDia() {
 
     return () => clearTimeout(timer)
   }, [indice])
-
-  // Esconde badge "novo" após 5s
-  useEffect(() => {
-    if (!isNovo) return
-    const t = setTimeout(() => setIsNovo(false), 5000)
-    return () => clearTimeout(t)
-  }, [isNovo])
 
   function avancar() {
     setIndice((i) => (i + 1) % DICAS.length)
