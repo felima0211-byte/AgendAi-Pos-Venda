@@ -1,11 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { AudioLines, FileText } from 'lucide-react'
 import type { DashboardData } from '../hooks/use-dashboard'
 
-const LIMIT = 3
+const LIMIT = 4
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -20,7 +19,7 @@ function timeAgo(iso: string) {
 export function RecentAtendimentos({ items }: { items: DashboardData['recentAtendimentos'] }) {
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? items : items.slice(0, LIMIT)
-  const canToggle = items.length > LIMIT
+  const hidden = items.length - LIMIT
 
   return (
     <div className="px-4 mt-6 animate-slide-up" style={{ animationDelay: '160ms' }}>
@@ -28,12 +27,22 @@ export function RecentAtendimentos({ items }: { items: DashboardData['recentAten
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
           Atendimentos recentes
         </h2>
-        <Link
-          href="/clientes"
-          className="text-[13px] font-semibold text-[var(--color-primary)]"
-        >
-          Ver todos
-        </Link>
+        {hidden > 0 && !expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="text-[13px] font-semibold text-[var(--color-primary)]"
+          >
+            Ver mais {hidden}
+          </button>
+        )}
+        {expanded && (
+          <button
+            onClick={() => setExpanded(false)}
+            className="text-[13px] font-semibold text-[var(--color-primary)]"
+          >
+            Ver menos
+          </button>
+        )}
       </div>
 
       {items.length === 0 ? (
@@ -67,14 +76,6 @@ export function RecentAtendimentos({ items }: { items: DashboardData['recentAten
               </div>
             )
           })}
-          {canToggle && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="mt-1 self-start text-[12px] font-semibold text-[var(--color-primary)]"
-            >
-              {expanded ? 'Ver menos' : `Ver mais ${items.length - LIMIT}`}
-            </button>
-          )}
         </div>
       )}
     </div>

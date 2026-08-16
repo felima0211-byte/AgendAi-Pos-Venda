@@ -17,7 +17,7 @@ const KIND_TO_MESSAGE: Record<string, 'POST_SALE' | 'REPURCHASE' | 'REMINDER' | 
   CUSTOM: 'CUSTOM',
 }
 
-const LIMIT = 3
+const LIMIT = 4
 
 async function patchReminder(id: string, body: object) {
   await fetch(`/api/reminders/${id}`, {
@@ -131,7 +131,6 @@ export function TodayReminders({ reminders, overdueReminders }: Props) {
       <div className="px-4 mt-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Lembretes de hoje</h2>
-          <Link href="/lembretes" className="text-[13px] font-semibold text-[var(--color-primary)]">Ver todos</Link>
         </div>
         <p className="text-[13px] text-[var(--color-text-secondary)]">Nenhum lembrete para hoje.</p>
       </div>
@@ -151,7 +150,11 @@ export function TodayReminders({ reminders, overdueReminders }: Props) {
             </span>
           )}
         </div>
-        <Link href="/lembretes" className="text-[13px] font-semibold text-[var(--color-primary)]">Ver todos</Link>
+        {hiddenCount > 0 && !expanded && (
+          <button onClick={() => setExpanded(true)} className="text-[13px] font-semibold text-[var(--color-primary)]">
+            Ver mais {hiddenCount}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -176,12 +179,9 @@ export function TodayReminders({ reminders, overdueReminders }: Props) {
         ))}
       </div>
 
-      {hiddenCount > 0 && (
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-2 text-[12px] font-semibold text-[var(--color-primary)]"
-        >
-          {expanded ? 'Ver menos' : `Ver mais ${hiddenCount}`}
+      {expanded && (
+        <button onClick={() => setExpanded(false)} className="mt-2 text-[12px] font-semibold text-[var(--color-primary)]">
+          Ver menos
         </button>
       )}
     </div>
