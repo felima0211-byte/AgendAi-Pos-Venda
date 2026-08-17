@@ -31,6 +31,7 @@ export interface DashboardData {
   aiInsights: Array<{ id: string; body: string; clientName: string }>
   recentAtendimentos: Array<{
     id: string
+    clientId: string
     clientName: string
     summary: string
     type: string

@@ -20,7 +20,7 @@ interface ClientDetail {
   notes: string | null
   _count: { sales: number; reminders: number; interactions: number }
   sales: Array<{
-    id: string; total: number; status: string; createdAt: string
+    id: string; total: number; status: string; createdAt: string; notes: string | null
     items: Array<{ quantity: number; unitPrice: number; product: { name: string } }>
   }>
   interactions: Array<{
@@ -45,6 +45,21 @@ export default function ClienteDetailPage() {
   const [editOpen, setEditOpen] = useState(false)
   const [messageOpen, setMessageOpen] = useState(false)
   const [novaVendaOpen, setNovaVendaOpen] = useState(false)
+  const [editVenda, setEditVenda] = useState<{ id: string; notes: string; total: number } | null>(null)
+  const [savingVenda, setSavingVenda] = useState(false)
+
+  const saveEditVenda = async () => {
+    if (!editVenda) return
+    setSavingVenda(true)
+    await fetch(`/api/clients/sales/${editVenda.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes: editVenda.notes, valorTotal: editVenda.total }),
+    })
+    setSavingVenda(false)
+    setEditVenda(null)
+    loadClient()
+  }
 
   const loadClient = () => {
     setLoading(true)
@@ -217,9 +232,17 @@ export default function ClienteDetailPage() {
                           <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
                             {new Date(sale.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                           </span>
-                          <span className="text-sm font-bold text-violet-600 shrink-0">
-                            {Number(sale.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-bold text-violet-600">
+                              {Number(sale.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </span>
+                            <button
+                              onClick={() => setEditVenda({ id: sale.id, notes: sale.notes ?? '', total: Number(sale.total) })}
+                              className="p-1 rounded-lg hover:bg-violet-50 text-gray-400 hover:text-violet-600 transition-colors"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                          </div>
                         </div>
 
                         {sale.items?.length > 0 ? (
@@ -232,6 +255,12 @@ export default function ClienteDetailPage() {
                           </div>
                         ) : (
                           <p className="text-xs text-gray-400 mt-1">Venda registrada</p>
+                        )}
+
+                        {sale.notes && (
+                          <p className="text-xs text-gray-500 mt-2 border-t border-gray-50 pt-2">
+                            {sale.notes}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -322,6 +351,57 @@ export default function ClienteDetailPage() {
         defaultType="POST_SALE"
         onClose={() => setMessageOpen(false)}
       />
+
+      {/* Modal editar venda */}
+      {editVenda && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30" onClick={() => setEditVenda(null)}>
+          <div
+            className="w-full max-w-lg bg-white rounded-t-3xl p-6 pb-10 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-bold text-gray-800">Editar venda</h3>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">Valor total (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={editVenda.total}
+                onChange={(e) => setEditVenda((v) => v && ({ ...v, total: Number(e.target.value) }))}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-violet-400"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">Descrição / observação</label>
+              <textarea
+                rows={3}
+                value={editVenda.notes}
+                onChange={(e) => setEditVenda((v) => v && ({ ...v, notes: e.target.value }))}
+                placeholder="Ex.: cliente adorou, pediu para avisar sobre novidades..."
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-violet-400 resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setEditVenda(null)}
+                className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveEditVenda}
+                disabled={savingVenda}
+                className="flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-50"
+                style={{ backgroundColor: '#6C4CF0' }}
+              >
+                {savingVenda ? 'Salvando…' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

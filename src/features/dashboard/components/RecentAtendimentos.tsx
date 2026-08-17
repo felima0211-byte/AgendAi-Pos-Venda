@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { AudioLines, FileText } from 'lucide-react'
 import type { DashboardData } from '../hooks/use-dashboard'
 
@@ -55,9 +56,10 @@ export function RecentAtendimentos({ items }: { items: DashboardData['recentAten
             const isAudio = a.type === 'AUDIO_NOTE'
             const Icon = isAudio ? AudioLines : FileText
             return (
-              <div
+              <Link
                 key={a.id}
-                className="flex items-center gap-3 bg-[var(--color-surface)] rounded-[var(--radius-lg)] p-3 border border-[var(--color-border)]"
+                href={`/clientes/${a.clientId}`}
+                className="flex items-center gap-3 bg-[var(--color-surface)] rounded-[var(--radius-lg)] p-3 border border-[var(--color-border)] active:opacity-80"
               >
                 <div className="w-9 h-9 rounded-[var(--radius-md)] bg-[var(--color-primary-tint)] flex items-center justify-center shrink-0">
                   <Icon size={16} className="text-[var(--color-primary)]" />
@@ -73,7 +75,7 @@ export function RecentAtendimentos({ items }: { items: DashboardData['recentAten
                 <span className="text-xs text-[var(--color-text-tertiary)] shrink-0">
                   {timeAgo(a.createdAt)}
                 </span>
-              </div>
+              </Link>
             )
           })}
         </div>

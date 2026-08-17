@@ -59,6 +59,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   })
   const recentAtendimentos = recentInteractions.map((i) => ({
     id: i.id,
+    clientId: i.clientId,
     clientName: i.client.name,
     summary: i.aiSummary ?? i.notes ?? 'Atendimento registrado',
     type: i.type,
