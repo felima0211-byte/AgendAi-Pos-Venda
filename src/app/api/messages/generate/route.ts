@@ -57,7 +57,24 @@ export const POST = withAuth(
       observacoes: extracted?.observacoes ?? client.notes ?? null,
     }
 
-    const { content, model } = await generateMessage(type as MessageType, ctx)
+    let content: string
+    let model: string
+    try {
+      const result = await generateMessage(type as MessageType, ctx)
+      content = result.content
+      model = result.model
+    } catch (aiErr) {
+      console.error(JSON.stringify({
+        ts: new Date().toISOString(),
+        scope: 'messages/generate',
+        error: aiErr instanceof Error ? aiErr.message : String(aiErr),
+      }))
+      throw new Error(
+        aiErr instanceof Error && aiErr.message.includes('GROQ_API_KEY')
+          ? 'Chave de IA não configurada. Contate o suporte.'
+          : 'Não foi possível gerar a mensagem. Tente novamente em alguns segundos.',
+      )
+    }
 
     const saved = await prisma.generatedMessage.create({
       data: { clientId, reminderId: reminderId ?? null, type: type as MessageType, content, model },

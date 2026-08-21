@@ -47,9 +47,9 @@ export function MessageGeneratorSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
+    <div className="fixed inset-0 z-[250] flex items-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full bg-white rounded-t-3xl p-6 pb-10 max-h-[88vh] overflow-y-auto">
+      <div className="relative w-full bg-white rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-violet-600" /> Gerar mensagem
