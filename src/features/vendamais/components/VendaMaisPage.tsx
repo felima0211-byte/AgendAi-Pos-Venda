@@ -1,8 +1,100 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Zap, BookOpen, Award, BarChart2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Zap, BookOpen, Award, BarChart2, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { ESTUDOS, TATICAS, CASOS, ESTATISTICAS } from '../content'
+
+const TUTORIAL_KEY = 'vendamais_tutorial_visto'
+
+const TUTORIAL_STEPS = [
+  {
+    icon: '⚡',
+    titulo: 'Tudo aqui se renova a cada hora',
+    descricao: 'Novos aprendizados, táticas e dados aparecem automaticamente. Volte sempre que puder.',
+  },
+  {
+    icon: '📖',
+    titulo: 'Aprendizado do momento',
+    descricao: 'Um estudo aprofundado com pontos práticos baseados em dados reais de mercado.',
+  },
+  {
+    icon: '🎯',
+    titulo: 'Táticas rápidas',
+    descricao: 'Três ações que você pode aplicar agora mesmo para vender mais hoje.',
+  },
+  {
+    icon: '🏆',
+    titulo: 'Como as grandes marcas fazem',
+    descricao: 'Cases reais de Natura, Farm, Arezzo e outras — adaptados para você usar no seu negócio.',
+  },
+  {
+    icon: '📊',
+    titulo: 'Números do mercado',
+    descricao: 'Estatísticas atualizadas sobre vendas, recompra e comportamento do consumidor no Brasil.',
+  },
+]
+
+function TutorialPopup({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState(0)
+  const isLast = step === TUTORIAL_STEPS.length - 1
+  const current = TUTORIAL_STEPS[step]
+
+  function avancar() {
+    if (isLast) {
+      localStorage.setItem(TUTORIAL_KEY, '1')
+      onClose()
+    } else {
+      setStep((s) => s + 1)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-white rounded-t-3xl px-6 pt-6 pb-10 animate-slide-up">
+
+        {/* Fechar */}
+        <button
+          onClick={() => { localStorage.setItem(TUTORIAL_KEY, '1'); onClose() }}
+          className="absolute top-4 right-4 p-1.5 rounded-full"
+          style={{ backgroundColor: '#F3F4F6' }}
+        >
+          <X size={14} style={{ color: '#6B7280' }} />
+        </button>
+
+        {/* Ícone + conteúdo */}
+        <div className="flex flex-col items-center text-center pt-2 pb-6">
+          <span className="text-4xl mb-4">{current.icon}</span>
+          <h2 className="text-base font-bold mb-2" style={{ color: '#1A1830' }}>{current.titulo}</h2>
+          <p className="text-sm leading-relaxed" style={{ color: '#6B7280' }}>{current.descricao}</p>
+        </div>
+
+        {/* Dots */}
+        <div className="flex justify-center gap-1.5 mb-5">
+          {TUTORIAL_STEPS.map((_, i) => (
+            <span
+              key={i}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: i === step ? 20 : 6,
+                height: 6,
+                backgroundColor: i === step ? '#6C4CF0' : '#E5E7EB',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Botão */}
+        <button
+          onClick={avancar}
+          className="w-full py-3.5 rounded-2xl text-sm font-bold text-white"
+          style={{ backgroundColor: '#6C4CF0' }}
+        >
+          {isLast ? 'Começar' : 'Próximo'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function getHourSeed() {
   const now = new Date()
@@ -43,7 +135,12 @@ export function VendaMaisPage() {
   const [taticas] = useState(() => pick3Taticas())
   const [stats]   = useState(() => pick4Stats())
   const [casoIdx, setCasoIdx] = useState(() => getHourSeed() % CASOS.length)
+  const [showTutorial, setShowTutorial] = useState(false)
   const caso = CASOS[casoIdx]
+
+  useEffect(() => {
+    if (!localStorage.getItem(TUTORIAL_KEY)) setShowTutorial(true)
+  }, [])
 
   useEffect(() => {
     const now = new Date()
@@ -53,6 +150,8 @@ export function VendaMaisPage() {
   }, [])
 
   return (
+    <>
+    {showTutorial && <TutorialPopup onClose={() => setShowTutorial(false)} />}
     <div className="pb-28 pt-4 px-4 space-y-5">
 
       {/* Header */}
@@ -150,6 +249,7 @@ export function VendaMaisPage() {
       </div>
 
     </div>
+    </>
   )
 }
 
