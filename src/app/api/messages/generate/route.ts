@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/api/handler'
 import { apiSuccess } from '@/lib/api/response'
 import { generateMessageSchema } from '@/lib/api/schemas'
-import { NotFoundError } from '@/lib/api/errors'
+import { NotFoundError, ApiException } from '@/lib/api/errors'
 import { generateMessage } from '@/services/ai/message-generator.service'
 import type { MessageContext, MessageType } from '@/types/message'
 import type { AiExtractedData } from '@/types/ai-extraction'
@@ -57,6 +57,10 @@ export const POST = withAuth(
       observacoes: extracted?.observacoes ?? client.notes ?? null,
     }
 
+    if (!process.env.GROQ_API_KEY) {
+      throw new ApiException('Chave de IA não configurada no servidor.', 502, 'AI_ERROR')
+    }
+
     let content: string
     let model: string
     try {
@@ -64,16 +68,14 @@ export const POST = withAuth(
       content = result.content
       model = result.model
     } catch (aiErr) {
-      console.error(JSON.stringify({
-        ts: new Date().toISOString(),
-        scope: 'messages/generate',
-        error: aiErr instanceof Error ? aiErr.message : String(aiErr),
-      }))
-      throw new Error(
-        aiErr instanceof Error && aiErr.message.includes('GROQ_API_KEY')
-          ? 'Chave de IA não configurada. Contate o suporte.'
-          : 'Não foi possível gerar a mensagem. Tente novamente em alguns segundos.',
-      )
+      const msg = aiErr instanceof Error ? aiErr.message : String(aiErr)
+      console.error(JSON.stringify({ ts: new Date().toISOString(), scope: 'messages/generate', error: msg }))
+      const friendlyMsg = msg.includes('GROQ_API_KEY')
+        ? 'Chave de IA não configurada. Contate o suporte.'
+        : msg.includes('vazia') || msg.includes('empty')
+          ? 'A IA não gerou uma resposta. Tente novamente.'
+          : 'Não foi possível conectar à IA. Tente novamente em instantes.'
+      throw new ApiException(friendlyMsg, 502, 'AI_ERROR')
     }
 
     const saved = await prisma.generatedMessage.create({
