@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
+import { OnboardingTutorial } from '@/components/onboarding/OnboardingTutorial'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -57,6 +58,8 @@ export function MainLayout({
 
         {showBottomNav && <BottomNav />}
       </div>
+
+      <OnboardingTutorial />
     </div>
   )
 }
