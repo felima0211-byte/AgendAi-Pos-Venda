@@ -66,7 +66,7 @@ export function VendaMaisPage() {
 
       {/* ── ESTUDO DA HORA ─────────────────────────────── */}
       <div>
-        <SectionLabel icon={<BookOpen size={13} />} label="Estudo da hora" color="#6C4CF0" />
+        <SectionLabel icon={<BookOpen size={13} />} label="Aprendizado do momento" color="#6C4CF0" />
         <div className="rounded-2xl p-4" style={{ backgroundColor: '#EDE9FD', border: '1px solid #D4CCFA' }}>
           <p className="text-sm font-bold mb-3" style={{ color: '#1A1830' }}>{estudo.titulo}</p>
           <div className="space-y-2 mb-3">
