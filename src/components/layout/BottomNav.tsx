@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Home, Users, Bell, Zap, Mic } from 'lucide-react'
+import { Home, Users, CalendarDays, Zap, Mic } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { RegistrarAtendimentoSheet } from '@/features/atendimento/components/RegistrarAtendimentoSheet'
@@ -19,7 +19,7 @@ const LEFT_ITEMS: NavItem[] = [
 ]
 
 const RIGHT_ITEMS: NavItem[] = [
-  { href: '/lembretes', label: 'Pós Venda', icon: Bell },
+  { href: '/lembretes', label: 'Pós Venda', icon: CalendarDays },
   { href: '/vendamais', label: 'Venda+', icon: Zap },
 ]
 
