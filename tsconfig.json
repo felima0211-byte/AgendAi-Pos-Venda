@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,14 +23,30 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/components/ui": ["./src/components/ui/index.ts"],
-      "@/components/layout": ["./src/components/layout/index.ts"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/providers": ["./src/providers/index.tsx"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/types/*": ["./src/types/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/components/ui": [
+        "./src/components/ui/index.ts"
+      ],
+      "@/components/layout": [
+        "./src/components/layout/index.ts"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/providers": [
+        "./src/providers/index.tsx"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@/types/*": [
+        "./src/types/*"
+      ]
     }
   },
   "include": [
@@ -37,5 +57,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

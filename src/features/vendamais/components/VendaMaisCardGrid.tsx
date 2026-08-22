@@ -189,7 +189,7 @@ export function VendaMaisCardGrid({
   selectedEstudoIndex = 0,
 }: VendaMaisCardGridProps) {
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalData, setModalData] = useState<ModalProps | null>(null)
+  const [modalData, setModalData] = useState<Omit<ModalProps, 'open' | 'onClose'> | null>(null)
 
   function openModal(data: Omit<ModalProps, 'open' | 'onClose'>) {
     setModalData(data)
