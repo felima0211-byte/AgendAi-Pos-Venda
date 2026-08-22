@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Menu, X, Home, Users, CalendarDays, Zap, LogOut, UserCircle, Search } from 'lucide-react'
+import { Menu, X, Home, Users, CalendarDays, Zap, LogOut, UserCircle, Search, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+
+const ROOT_PATHS = ['/dashboard', '/clientes', '/lembretes', '/vendamais', '/mais', '/assistente']
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Início', icon: Home },
@@ -30,21 +32,24 @@ export function TopBar({
   className,
   rightSlot,
 }: TopBarProps) {
-  const [open, setOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+  const router = useRouter()
   const { displayName, email, avatarUrl, signOut } = useCurrentUser()
 
+  const isRoot = ROOT_PATHS.some((p) => pathname === p)
+
   useEffect(() => {
-    if (!open) return
+    if (!menuOpen) return
     function handle(e: MouseEvent) {
       if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
-        setOpen(false)
+        setMenuOpen(false)
       }
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
-  }, [open])
+  }, [menuOpen])
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + '/')
@@ -59,21 +64,32 @@ export function TopBar({
           className,
         )}
       >
-        <div className="flex items-center justify-between px-4 h-14">
-          {/* Left */}
-          <div className="flex flex-col justify-center min-w-0">
-            <span className="text-[var(--text-h3)] font-semibold text-[var(--color-text-primary)] leading-tight truncate">
-              {title}
-            </span>
-            {subtitle && (
-              <span className="text-[var(--text-caption)] text-[var(--color-text-secondary)] leading-tight truncate">
-                {subtitle}
-              </span>
+        <div className="flex items-center justify-between px-4 h-14 gap-2">
+          {/* Left — back button ou título */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {!isRoot && (
+              <button
+                onClick={() => router.back()}
+                aria-label="Voltar"
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors duration-[var(--duration-fast)] -ml-1"
+              >
+                <ChevronLeft size={22} />
+              </button>
             )}
+            <div className="flex flex-col justify-center min-w-0">
+              <span className="text-[var(--text-h3)] font-semibold text-[var(--color-text-primary)] leading-tight truncate">
+                {title}
+              </span>
+              {subtitle && (
+                <span className="text-[var(--text-caption)] text-[var(--color-text-secondary)] leading-tight truncate">
+                  {subtitle}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Right */}
-          <div className="flex items-center gap-1 shrink-0 ml-3">
+          <div className="flex items-center gap-1 shrink-0">
             {showSearch && (
               <button
                 aria-label="Buscar"
@@ -86,7 +102,7 @@ export function TopBar({
             {rightSlot}
 
             <button
-              onClick={() => setOpen(true)}
+              onClick={() => setMenuOpen(true)}
               aria-label="Menu"
               className="w-9 h-9 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors duration-[var(--duration-fast)]"
             >
@@ -97,12 +113,13 @@ export function TopBar({
       </header>
 
       {/* Overlay */}
-      {open && (
-        <div
-          className="fixed inset-0 z-[300] bg-black/30 backdrop-blur-sm"
-          aria-hidden="true"
-        />
-      )}
+      <div
+        className={cn(
+          'fixed inset-0 z-[300] bg-black/30 backdrop-blur-sm transition-opacity duration-[var(--duration-slow)]',
+          menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
+        )}
+        aria-hidden="true"
+      />
 
       {/* Drawer */}
       <div
@@ -111,14 +128,14 @@ export function TopBar({
           'fixed top-0 right-0 bottom-0 z-[400] w-72 flex flex-col',
           'bg-[var(--color-surface)] border-l border-[var(--color-border)]',
           'transition-transform duration-[var(--duration-slow)]',
-          open ? 'translate-x-0' : 'translate-x-full',
+          menuOpen ? 'translate-x-0' : 'translate-x-full',
         )}
       >
-        {/* Drawer header */}
+        {/* Header */}
         <div className="flex items-center justify-between px-5 h-14 border-b border-[var(--color-border)] shrink-0">
           <span className="font-semibold text-sm text-[var(--color-text-primary)]">Menu</span>
           <button
-            onClick={() => setOpen(false)}
+            onClick={() => setMenuOpen(false)}
             aria-label="Fechar menu"
             className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] transition-colors"
           >
@@ -153,7 +170,7 @@ export function TopBar({
           </div>
         </div>
 
-        {/* Nav items */}
+        {/* Nav */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = isActive(href)
@@ -161,7 +178,7 @@ export function TopBar({
               <Link
                 key={href}
                 href={href}
-                onClick={() => setOpen(false)}
+                onClick={() => setMenuOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-colors duration-[var(--duration-fast)]',
                   active
@@ -179,7 +196,7 @@ export function TopBar({
         {/* Sair */}
         <div className="px-3 py-4 border-t border-[var(--color-border)] shrink-0">
           <button
-            onClick={() => { setOpen(false); signOut() }}
+            onClick={() => { setMenuOpen(false); signOut() }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/8 transition-colors duration-[var(--duration-fast)]"
           >
             <LogOut size={18} />
