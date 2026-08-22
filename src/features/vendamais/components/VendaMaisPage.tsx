@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Zap, BookOpen, Award, BarChart2, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Zap, X } from 'lucide-react'
 import { ESTUDOS, TATICAS, CASOS, ESTATISTICAS } from '../content'
+import { VendaMaisCardGrid } from './VendaMaisCardGrid'
 
 const TUTORIAL_KEY = 'vendamais_tutorial_visto'
 
@@ -10,7 +11,7 @@ const TUTORIAL_STEPS = [
   {
     icon: '⚡',
     titulo: 'Tudo aqui se renova a cada hora',
-    descricao: 'Novos aprendizados, táticas e dados aparecem automaticamente. Volte sempre que puder.',
+    descricao: 'Novos aprendizados, estratégias e dados aparecem automaticamente. Volte sempre que puder.',
   },
   {
     icon: '📖',
@@ -19,7 +20,7 @@ const TUTORIAL_STEPS = [
   },
   {
     icon: '🎯',
-    titulo: 'Táticas rápidas',
+    titulo: 'Estratégias práticas',
     descricao: 'Três ações que você pode aplicar agora mesmo para vender mais hoje.',
   },
   {
@@ -29,7 +30,7 @@ const TUTORIAL_STEPS = [
   },
   {
     icon: '📊',
-    titulo: 'Números do mercado',
+    titulo: 'Dados para afiar seu conhecimento',
     descricao: 'Estatísticas atualizadas sobre vendas, recompra e comportamento do consumidor no Brasil.',
   },
 ]
@@ -51,21 +52,26 @@ function TutorialPopup({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
       <div className="w-full max-w-lg bg-white rounded-t-3xl px-6 pt-6 pb-10 animate-slide-up">
-
         {/* Fechar */}
         <button
-          onClick={() => { localStorage.setItem(TUTORIAL_KEY, '1'); onClose() }}
-          className="absolute top-4 right-4 p-1.5 rounded-full"
-          style={{ backgroundColor: '#F3F4F6' }}
+          onClick={() => {
+            localStorage.setItem(TUTORIAL_KEY, '1')
+            onClose()
+          }}
+          className="absolute top-4 right-4 p-1.5 rounded-full bg-[#F3F4F6]"
         >
-          <X size={14} style={{ color: '#6B7280' }} />
+          <X size={14} color="#6B7280" />
         </button>
 
         {/* Ícone + conteúdo */}
         <div className="flex flex-col items-center text-center pt-2 pb-6">
           <span className="text-4xl mb-4">{current.icon}</span>
-          <h2 className="text-base font-bold mb-2" style={{ color: '#1A1830' }}>{current.titulo}</h2>
-          <p className="text-sm leading-relaxed" style={{ color: '#6B7280' }}>{current.descricao}</p>
+          <h2 className="text-base font-bold mb-2 text-[var(--color-text-primary)]">
+            {current.titulo}
+          </h2>
+          <p className="text-sm leading-relaxed text-[#6B7280]">
+            {current.descricao}
+          </p>
         </div>
 
         {/* Dots */}
@@ -77,7 +83,8 @@ function TutorialPopup({ onClose }: { onClose: () => void }) {
               style={{
                 width: i === step ? 20 : 6,
                 height: 6,
-                backgroundColor: i === step ? '#6C4CF0' : '#E5E7EB',
+                backgroundColor:
+                  i === step ? 'var(--color-primary)' : '#E5E7EB',
               }}
             />
           ))}
@@ -86,8 +93,7 @@ function TutorialPopup({ onClose }: { onClose: () => void }) {
         {/* Botão */}
         <button
           onClick={avancar}
-          className="w-full py-3.5 rounded-2xl text-sm font-bold text-white"
-          style={{ backgroundColor: '#6C4CF0' }}
+          className="w-full py-3.5 rounded-2xl text-sm font-bold text-white bg-[var(--color-primary)]"
         >
           {isLast ? 'Começar' : 'Próximo'}
         </button>
@@ -98,7 +104,25 @@ function TutorialPopup({ onClose }: { onClose: () => void }) {
 
 function getHourSeed() {
   const now = new Date()
-  return now.getFullYear() * 1000000 + (now.getMonth() + 1) * 10000 + now.getDate() * 100 + now.getHours()
+  return (
+    now.getFullYear() * 1000000 +
+    (now.getMonth() + 1) * 10000 +
+    now.getDate() * 100 +
+    now.getHours()
+  )
+}
+
+function pickEstudos(): typeof ESTUDOS {
+  const seed = getHourSeed()
+  const result: typeof ESTUDOS = []
+  const used = new Set<number>()
+  for (let i = 0; i < Math.min(4, ESTUDOS.length); i++) {
+    let idx = (seed + i * 3) % ESTUDOS.length
+    while (used.has(idx)) idx = (idx + 1) % ESTUDOS.length
+    used.add(idx)
+    result.push(ESTUDOS[idx])
+  }
+  return result
 }
 
 function pick3Taticas(): typeof TATICAS {
@@ -107,6 +131,15 @@ function pick3Taticas(): typeof TATICAS {
     TATICAS[seed % TATICAS.length],
     TATICAS[(seed + 7) % TATICAS.length],
     TATICAS[(seed + 13) % TATICAS.length],
+  ]
+}
+
+function pick3Casos(): typeof CASOS {
+  const seed = getHourSeed()
+  return [
+    CASOS[seed % CASOS.length],
+    CASOS[(seed + 5) % CASOS.length],
+    CASOS[(seed + 11) % CASOS.length],
   ]
 }
 
@@ -123,20 +156,12 @@ function pick4Stats(): typeof ESTATISTICAS {
   return result
 }
 
-const STAT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  shopping:    { bg: '#F0F7FF', text: '#1D5FA6', border: '#BFD9F5' },
-  recompra:    { bg: '#F0FDF4', text: '#166534', border: '#BBF7D0' },
-  'pos-venda': { bg: '#FFF7ED', text: '#9A3412', border: '#FED7AA' },
-  digital:     { bg: '#F5F3FF', text: '#5B21B6', border: '#DDD6FE' },
-}
-
 export function VendaMaisPage() {
-  const [estudo]  = useState(() => ESTUDOS[getHourSeed() % ESTUDOS.length])
+  const [estudos] = useState(() => pickEstudos())
   const [taticas] = useState(() => pick3Taticas())
-  const [stats]   = useState(() => pick4Stats())
-  const [casoIdx, setCasoIdx] = useState(() => getHourSeed() % CASOS.length)
+  const [casos] = useState(() => pick3Casos())
+  const [stats] = useState(() => pick4Stats())
   const [showTutorial, setShowTutorial] = useState(false)
-  const caso = CASOS[casoIdx]
 
   useEffect(() => {
     if (!localStorage.getItem(TUTORIAL_KEY)) setShowTutorial(true)
@@ -151,113 +176,32 @@ export function VendaMaisPage() {
 
   return (
     <>
-    {showTutorial && <TutorialPopup onClose={() => setShowTutorial(false)} />}
-    <div className="pb-28 pt-4 px-4 space-y-5">
+      {showTutorial && (
+        <TutorialPopup onClose={() => setShowTutorial(false)} />
+      )}
 
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-0.5">
-          <Zap size={17} style={{ color: '#6C4CF0' }} />
-          <h1 className="text-lg font-bold" style={{ color: '#1A1830' }}>Venda+</h1>
-        </div>
-        <p className="text-[11px]" style={{ color: '#9CA3AF' }}>Atualiza a cada hora</p>
-      </div>
-
-      {/* ── ESTUDO DA HORA ─────────────────────────────── */}
-      <div>
-        <SectionLabel icon={<BookOpen size={13} />} label="Aprendizado do momento" color="#6C4CF0" />
-        <div className="rounded-2xl p-4" style={{ backgroundColor: '#EDE9FD', border: '1px solid #D4CCFA' }}>
-          <p className="text-sm font-bold mb-3" style={{ color: '#1A1830' }}>{estudo.titulo}</p>
-          <div className="space-y-2 mb-3">
-            {estudo.bullets.map((b, i) => (
-              <div key={i} className="flex gap-2.5 items-start">
-                <span className="w-4 h-4 rounded-full shrink-0 mt-0.5 flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: '#6C4CF0' }}>
-                  {i + 1}
-                </span>
-                <p className="text-[12px] leading-relaxed flex-1" style={{ color: '#2D2B4E' }}>{b}</p>
-              </div>
-            ))}
+      <div className="pb-28 pt-4 px-4 space-y-5">
+        {/* Header */}
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
+            <Zap size={17} color="var(--color-primary)" />
+            <h1 className="text-lg font-bold text-[var(--color-text-primary)]">
+              Venda+
+            </h1>
           </div>
-          <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: '#6C4CF0' }}>
-            <p className="text-[12px] font-semibold text-white leading-snug">💡 {estudo.destaque}</p>
-          </div>
+          <p className="text-xs text-[var(--color-text-tertiary)]">
+            Atualiza a cada hora
+          </p>
         </div>
-      </div>
 
-      {/* ── TÁTICAS RÁPIDAS ────────────────────────────── */}
-      <div>
-        <SectionLabel icon={<Zap size={13} />} label="Táticas rápidas" color="#E07B1A" />
-        <div className="space-y-2">
-          {taticas.map((t, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-2xl px-4 py-3"
-              style={{ backgroundColor: '#FFF7ED', border: '1px solid #FDE8C8' }}>
-              <span className="text-base leading-none mt-0.5">{t.emoji}</span>
-              <p className="text-[12px] leading-relaxed flex-1" style={{ color: '#1A1830' }}>{t.texto}</p>
-            </div>
-          ))}
-        </div>
+        {/* Grid de Cards */}
+        <VendaMaisCardGrid
+          estudos={estudos}
+          taticas={taticas}
+          casos={casos}
+          stats={stats}
+        />
       </div>
-
-      {/* ── GRANDES MARCAS ─────────────────────────────── */}
-      <div>
-        <SectionLabel icon={<Award size={13} />} label="Como as grandes fazem" color="#0F766E" />
-        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold" style={{ color: '#0F766E' }}>{caso.marca}</span>
-              <span className="text-[10px]" style={{ color: '#9CA3AF' }}>· {caso.segmento}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setCasoIdx((i) => (i - 1 + CASOS.length) % CASOS.length)}
-                className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#D1FAE5' }}>
-                <ChevronLeft size={13} style={{ color: '#0F766E' }} />
-              </button>
-              <span className="text-[10px] w-8 text-center" style={{ color: '#9CA3AF' }}>{casoIdx + 1}/{CASOS.length}</span>
-              <button onClick={() => setCasoIdx((i) => (i + 1) % CASOS.length)}
-                className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#D1FAE5' }}>
-                <ChevronRight size={13} style={{ color: '#0F766E' }} />
-              </button>
-            </div>
-          </div>
-          <div className="px-4 pb-4">
-            <p className="text-sm font-bold mb-2" style={{ color: '#1A1830' }}>{caso.titulo}</p>
-            <p className="text-[12px] leading-relaxed mb-3" style={{ color: '#374151' }}>{caso.descricao}</p>
-            <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0' }}>
-              <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: '#0F766E' }}>Aplique hoje</p>
-              <p className="text-[12px] leading-relaxed" style={{ color: '#1A1830' }}>{caso.licao}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── ESTATÍSTICAS ───────────────────────────────── */}
-      <div>
-        <SectionLabel icon={<BarChart2 size={13} />} label="Números do mercado" color="#1D5FA6" />
-        <div className="grid grid-cols-2 gap-2">
-          {stats.map((s, i) => {
-            const c = STAT_COLORS[s.categoria]
-            return (
-              <div key={i} className="rounded-2xl p-3 flex flex-col gap-1"
-                style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
-                <span className="text-2xl font-black leading-none" style={{ color: c.text }}>{s.numero}</span>
-                <p className="text-[11px] leading-snug" style={{ color: '#374151' }}>{s.descricao}</p>
-                <p className="text-[9px] mt-0.5" style={{ color: '#9CA3AF' }}>{s.fonte}</p>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-    </div>
     </>
-  )
-}
-
-function SectionLabel({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
-  return (
-    <div className="flex items-center gap-1.5 mb-2 px-0.5">
-      <span style={{ color }}>{icon}</span>
-      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color }}>{label}</span>
-    </div>
   )
 }
